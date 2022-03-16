@@ -42,6 +42,7 @@ defmodule ApiBlogsWeb.Router do
 
     get "/user", UserController, :index
     get "/user/:id", UserController, :show
+    delete "/user/me", UserController, :delete
   end
 
   # Enables LiveDashboard only for development

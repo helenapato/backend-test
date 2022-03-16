@@ -234,18 +234,33 @@ defmodule ApiBlogsWeb.UserControllerTest do
   #   end
   # end
 
-  # describe "delete user" do
-  #   setup [:create_user]
+  describe "delete user" do
+    setup [:add_user]
 
-  #   test "deletes chosen user", %{conn: conn, user: user} do
-  #     conn = delete(conn, Routes.user_path(conn, :delete, user))
-  #     assert response(conn, 204)
+    test "successfull delete", %{conn: conn, jwt: jwt} do
+      conn = build_conn()
+      conn = conn
+      |> put_req_header("authorization", "bearer " <> jwt)
+      |> delete(Routes.user_path(conn, :delete))
 
-  #     assert_error_sent 404, fn ->
-  #       get(conn, Routes.user_path(conn, :show, user))
-  #     end
-  #   end
-  # end
+      assert response(conn, 204) == ""
+    end
+
+    test "returns error for invalid jwt", %{conn: conn} do
+      conn = build_conn()
+      conn =
+      conn
+      |> put_req_header("authorization", "bearer abcd")
+      |> delete(Routes.user_path(conn, :delete))
+
+      assert json_response(conn, 401) == %{"message" => "Token expirado ou invalido"}
+    end
+
+    test "returns error for missing jwt", %{conn: conn} do
+      conn = delete(conn, Routes.user_path(conn, :delete))
+      assert json_response(conn, 401) == %{"message" => "Token nao encontrado"}
+    end
+  end
 
   describe "user login" do
     setup [:add_user]
