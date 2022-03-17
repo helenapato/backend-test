@@ -38,8 +38,8 @@ defmodule ApiBlogsWeb.UserControllerTest do
       split_response_body = String.split(conn.resp_body, "\"")
       [_ | [_ | [_ | [jwt | _]]]] = split_response_body
 
-      conn = build_conn()
-      conn = conn
+      conn =
+      build_conn()
       |> put_req_header("authorization", "bearer " <> jwt)
       |> get(Routes.user_path(conn, :index))
 
@@ -71,8 +71,8 @@ defmodule ApiBlogsWeb.UserControllerTest do
       split_response_body = String.split(conn.resp_body, "\"")
       [_ | [_ | [_ | [jwt | _]]]] = split_response_body
 
-      conn = build_conn()
-      conn = conn
+      conn =
+      build_conn()
       |> put_req_header("authorization", "bearer " <> jwt)
       |> get(Routes.user_path(conn, :index))
 
@@ -168,8 +168,8 @@ defmodule ApiBlogsWeb.UserControllerTest do
     setup [:add_user]
 
     test "returns correct user info", %{conn: conn, jwt: jwt} do
-      conn = build_conn()
-      conn = conn
+      conn =
+      build_conn()
       |> put_req_header("authorization", "bearer " <> jwt)
       |> get(Routes.user_path(conn, :index))
 
@@ -182,8 +182,8 @@ defmodule ApiBlogsWeb.UserControllerTest do
     end
 
     test "returns error for nonexistent user", %{conn: conn, jwt: jwt} do
-      conn = build_conn()
-      conn = conn
+      conn =
+      build_conn()
       |> put_req_header("authorization", "bearer " <> jwt)
       |> get(Routes.user_path(conn, :index))
 
@@ -195,9 +195,8 @@ defmodule ApiBlogsWeb.UserControllerTest do
     end
 
     test "returns error for invalid jwt", %{conn: conn} do
-      conn = build_conn()
       conn =
-      conn
+      build_conn()
       |> put_req_header("authorization", "bearer abcd")
       |> get(Routes.user_path(conn, :show, 1))
 
@@ -238,8 +237,8 @@ defmodule ApiBlogsWeb.UserControllerTest do
     setup [:add_user]
 
     test "successfull delete", %{conn: conn, jwt: jwt} do
-      conn = build_conn()
-      conn = conn
+      conn =
+      build_conn()
       |> put_req_header("authorization", "bearer " <> jwt)
       |> delete(Routes.user_path(conn, :delete))
 
@@ -247,9 +246,8 @@ defmodule ApiBlogsWeb.UserControllerTest do
     end
 
     test "returns error for invalid jwt", %{conn: conn} do
-      conn = build_conn()
       conn =
-      conn
+      build_conn()
       |> put_req_header("authorization", "bearer abcd")
       |> delete(Routes.user_path(conn, :delete))
 
