@@ -38,13 +38,18 @@ defmodule ApiBlogsWeb.UserController do
   #   end
   # end
 
-  # def delete(conn, %{"id" => id}) do
-  #   user = Blog.get_user!(id)
+  def delete(conn, _params) do
+    with {:ok, %{"sub" => id}} <- extract_id(conn),
+      user <- Blog.get_user!(id),
+      {:ok, %User{}} <- Blog.delete_user(user) do
+        send_resp(conn, :no_content, "")
+      end
+  end
 
-  #   with {:ok, %User{}} <- Blog.delete_user(user) do
-  #     send_resp(conn, :no_content, "")
-  #   end
-  # end
+  defp extract_id(conn) do
+    conn.private[:guardian_default_token]
+    |> Guardian.decode_and_verify()
+  end
 
   def login(conn, %{"user" => user_params}) do
     with {:ok, %{} = user} <- Blog.do_login(user_params),
