@@ -40,7 +40,7 @@ defmodule ApiBlogsWeb.PostControllerTest do
     test "renders post when data is valid", %{conn: conn, jwt: jwt} do
       conn =
         conn
-        |> put_req_header("authorization", "bearer " <> jwt)
+        |> put_valid_jwt_header(jwt)
         |> post(Routes.post_path(conn, :create), post: @create_attrs)
       assert %{
         "content" => "The whole text for the blog post goes here in this key",
@@ -54,9 +54,9 @@ defmodule ApiBlogsWeb.PostControllerTest do
       }
       conn =
         conn
-        |> put_req_header("authorization", "bearer " <> jwt)
+        |> put_valid_jwt_header(jwt)
         |> post(Routes.post_path(conn, :create), post: invalid_attrs)
-      assert json_response(conn, 400)["message"] == "title and content are required"
+      assert %{"message" => "title and content are required"} = json_response(conn, 400)
     end
 
     test "renders errors when no content is provided", %{conn: conn, jwt: jwt} do
@@ -65,22 +65,22 @@ defmodule ApiBlogsWeb.PostControllerTest do
       }
       conn =
         conn
-        |> put_req_header("authorization", "bearer " <> jwt)
+        |> put_valid_jwt_header(jwt)
         |> post(Routes.post_path(conn, :create), post: invalid_attrs)
-      assert json_response(conn, 400)["message"] == "title and content are required"
+      assert %{"message" => "title and content are required"} = json_response(conn, 400)
     end
 
     test "renders errors when jwt is invalid", %{conn: conn} do
       conn =
         conn
-        |> put_req_header("authorization", "bearer abcd")
+        |> put_invalid_jwt_header()
         |> post(Routes.post_path(conn, :create), post: @create_attrs)
-        assert json_response(conn, 401)["message"] == "Token expirado ou invalido"
+      assert %{"message" => "Token expirado ou invalido"} = json_response(conn, 401)
     end
 
     test "renders errors when jwt is missing", %{conn: conn} do
       conn = post(conn, Routes.post_path(conn, :create), post: @create_attrs)
-      assert json_response(conn, 401)["message"] == "Token nao encontrado"
+      assert %{"message" => "Token nao encontrado"} = json_response(conn, 401)
     end
   end
 
@@ -130,5 +130,13 @@ defmodule ApiBlogsWeb.PostControllerTest do
     conn = post(conn, Routes.user_path(conn, :create), user: @user_create_attrs)
     [_ | [_ | [_ | [jwt | _]]]] = String.split(conn.resp_body, "\"")
     {:ok, conn: build_conn(), jwt: jwt}
+  end
+
+  defp put_invalid_jwt_header(conn) do
+    put_req_header(conn, "authorization", "bearer abcd")
+  end
+
+  defp put_valid_jwt_header(conn, jwt) do
+    put_req_header(conn, "authorization", "bearer " <> jwt)
   end
 end
