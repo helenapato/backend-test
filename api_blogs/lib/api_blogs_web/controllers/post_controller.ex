@@ -3,6 +3,7 @@ defmodule ApiBlogsWeb.PostController do
 
   alias ApiBlogs.Blog
   alias ApiBlogs.Blog.Post
+  alias ApiBlogsWeb.UserController
 
   action_fallback ApiBlogsWeb.FallbackController
 
@@ -11,13 +12,27 @@ defmodule ApiBlogsWeb.PostController do
     render(conn, "index.json", posts: posts)
   end
 
-  def create(conn, %{"post" => post_params}) do
-    with {:ok, %Post{} = post} <- Blog.create_post(post_params) do
+  def create(conn, %{"post" => %{"content" => content, "title" => title}}) do
+    {:ok, %{"sub" => id}} = UserController.extract_id(conn)
+    time_now = NaiveDateTime.utc_now()
+
+    new_post = %{
+      "content" => content,
+      "published" => time_now,
+      "title" => title,
+      "updated" => time_now,
+      "user_id" => id
+    }
+
+    with {:ok, %Post{} = post} <- Blog.create_post(new_post) do
       conn
       |> put_status(:created)
-      |> put_resp_header("location", Routes.post_path(conn, :show, post))
-      |> render("show.json", post: post)
+      |> render("create.json", post: post)
     end
+  end
+
+  def create(_conn, %{"post" => _post_params}) do
+    {:error, :missing_title_content}
   end
 
   def show(conn, %{"id" => id}) do

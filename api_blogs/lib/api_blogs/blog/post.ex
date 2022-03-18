@@ -15,7 +15,7 @@ defmodule ApiBlogs.Blog.Post do
   @doc false
   def changeset(post, attrs) do
     post
-    |> cast(attrs, [:title, :content, :published, :updated])
+    |> cast(attrs, [:title, :content, :published, :updated, :user_id])
     |> validate_required([:title, :content, :published, :updated])
     |> foreign_key_constraint(:user_id)
   end

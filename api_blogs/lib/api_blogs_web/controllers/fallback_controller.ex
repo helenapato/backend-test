@@ -53,4 +53,11 @@ defmodule ApiBlogsWeb.FallbackController do
     |> put_view(ApiBlogsWeb.ErrorView)
     |> json(%{message: "Usuario nao existe"})
   end
+
+  def call(conn, {:error, :missing_title_content}) do
+    conn
+    |> put_status(:bad_request)
+    |> put_view(ApiBlogsWeb.ErrorView)
+    |> json(%{message: "title and content are required"})
+  end
 end
