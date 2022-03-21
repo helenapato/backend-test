@@ -35,7 +35,7 @@ defmodule ApiBlogsWeb.PostControllerTest do
   # end
 
   describe "create post" do
-    setup [:create_user]
+    setup [:add_user_jwt]
 
     test "renders post when data is valid", %{conn: conn, jwt: jwt} do
       conn =
@@ -126,10 +126,14 @@ defmodule ApiBlogsWeb.PostControllerTest do
   #   %{post: post}
   # end
 
-  defp create_user %{conn: conn} do
+  defp add_user_jwt %{conn: conn} do
     conn = post(conn, Routes.user_path(conn, :create), user: @user_create_attrs)
+    {:ok, conn: build_conn(), jwt: get_jwt_from_conn_header(conn)}
+  end
+
+  defp get_jwt_from_conn_header(conn) do
     [_ | [_ | [_ | [jwt | _]]]] = String.split(conn.resp_body, "\"")
-    {:ok, conn: build_conn(), jwt: jwt}
+    jwt
   end
 
   defp put_invalid_jwt_header(conn) do
