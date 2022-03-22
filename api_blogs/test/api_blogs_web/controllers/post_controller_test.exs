@@ -56,7 +56,7 @@ defmodule ApiBlogsWeb.PostControllerTest do
         conn
         |> put_valid_jwt_header(jwt)
         |> post(Routes.post_path(conn, :create), post: invalid_attrs)
-      assert %{"message" => "title and content are required"} = json_response(conn, 400)
+      assert %{"errors" => %{"title" => ["can't be blank"]}} = json_response(conn, 400)
     end
 
     test "renders errors when no content is provided", %{conn: conn, jwt: jwt} do
@@ -67,7 +67,7 @@ defmodule ApiBlogsWeb.PostControllerTest do
         conn
         |> put_valid_jwt_header(jwt)
         |> post(Routes.post_path(conn, :create), post: invalid_attrs)
-      assert %{"message" => "title and content are required"} = json_response(conn, 400)
+      assert %{"errors" => %{"content" => ["can't be blank"]}} = json_response(conn, 400)
     end
 
     test "renders errors when jwt is invalid", %{conn: conn} do

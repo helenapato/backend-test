@@ -12,27 +12,15 @@ defmodule ApiBlogsWeb.PostController do
     render(conn, "index.json", posts: posts)
   end
 
-  def create(conn, %{"post" => %{"content" => content, "title" => title}}) do
+  def create(conn, %{"post" => post_params}) do
     {:ok, %{"sub" => id}} = UserController.extract_id(conn)
-    time_now = NaiveDateTime.utc_now()
-
-    new_post = %{
-      "content" => content,
-      "published" => time_now,
-      "title" => title,
-      "updated" => time_now,
-      "user_id" => id
-    }
+    new_post = Map.put(post_params, "user_id", id)
 
     with {:ok, %Post{} = post} <- Blog.create_post(new_post) do
       conn
       |> put_status(:created)
       |> render("create.json", post: post)
     end
-  end
-
-  def create(_conn, %{"post" => _post_params}) do
-    {:error, :missing_title_content}
   end
 
   def show(conn, %{"id" => id}) do
