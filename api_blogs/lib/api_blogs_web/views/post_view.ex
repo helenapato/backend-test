@@ -1,6 +1,7 @@
 defmodule ApiBlogsWeb.PostView do
   use ApiBlogsWeb, :view
   alias ApiBlogsWeb.PostView
+  alias ApiBlogs.Blog
 
   def render("index.json", %{posts: posts}) do
     %{data: render_many(posts, PostView, "post.json")}
@@ -11,13 +12,21 @@ defmodule ApiBlogsWeb.PostView do
   end
 
   def render("post.json", %{post: post}) do
-    %{
-      id: post.id,
-      title: post.title,
-      content: post.content,
-      published: post.published,
-      updated: post.updated
-    }
+    with user <- Blog.get_user!(post.user_id) do
+      %{
+        id: post.id,
+        title: post.title,
+        content: post.content,
+        published: post.inserted_at,
+        updated: post.updated_at,
+        user: %{
+          id: user.id,
+          displayName: user.displayName,
+          email: user.email,
+          image: user.image
+        }
+      }
+    end
   end
 
   def render("create.json", %{post: post}) do

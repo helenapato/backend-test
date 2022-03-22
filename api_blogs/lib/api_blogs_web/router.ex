@@ -32,8 +32,8 @@ defmodule ApiBlogsWeb.Router do
 
     #resources "/users", UserController, except: [:new, :edit]
     #resources "/posts", PostController, except: [:new, :edit]
-    get "/post", PostController, :index
     get "/post/:id", PostController, :show
+    delete "/post/:id", PostController, :delete
 
     post "/user", UserController, :create
     post "/login", UserController, :login
@@ -47,6 +47,7 @@ defmodule ApiBlogsWeb.Router do
     delete "/user/me", UserController, :delete
 
     post "/post", PostController, :create
+    get "/post", PostController, :index
   end
 
   # Enables LiveDashboard only for development
