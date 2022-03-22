@@ -34,6 +34,10 @@ Instruções para instalar e configurar o projeto em seu computador.
 Para rodar os testes do user controller, use o comando abaixo, dentro da pasta `api_blogs`
 
 	mix test test/api_blogs_web/controllers/user_controller_test.exs
+
+Para rodar os testes do post controller, use o comando abaixo, dentro da pasta `api_blogs`
+
+	mix test test/api_blogs_web/controllers/post_controller_test.exs
 Para testar manualmente, inicie o servidor com 
 
 	mix phx.server

@@ -3,6 +3,7 @@ defmodule ApiBlogsWeb.PostController do
 
   alias ApiBlogs.Blog
   alias ApiBlogs.Blog.Post
+  alias ApiBlogsWeb.UserController
 
   action_fallback ApiBlogsWeb.FallbackController
 
@@ -12,11 +13,13 @@ defmodule ApiBlogsWeb.PostController do
   end
 
   def create(conn, %{"post" => post_params}) do
-    with {:ok, %Post{} = post} <- Blog.create_post(post_params) do
+    {:ok, %{"sub" => id}} = UserController.extract_id(conn)
+    new_post = Map.put(post_params, "user_id", id)
+
+    with {:ok, %Post{} = post} <- Blog.create_post(new_post) do
       conn
       |> put_status(:created)
-      |> put_resp_header("location", Routes.post_path(conn, :show, post))
-      |> render("show.json", post: post)
+      |> render("create.json", post: post)
     end
   end
 

@@ -46,7 +46,7 @@ defmodule ApiBlogsWeb.UserController do
       end
   end
 
-  defp extract_id(conn) do
+  def extract_id(conn) do
     conn.private[:guardian_default_token]
     |> Guardian.decode_and_verify()
   end
