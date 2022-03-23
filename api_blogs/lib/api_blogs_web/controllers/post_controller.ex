@@ -20,6 +20,11 @@ defmodule ApiBlogsWeb.PostController do
       [ %{post: post, user: user} | get_post_user(posts)]
     end
   end
+  defp get_post_user(post) do
+    with user <- Blog.get_user!(post.user_id) do
+      %{post: post, user: user}
+    end
+  end
 
   def create(conn, %{"post" => post_params}) do
     {:ok, %{"sub" => id}} = UserController.extract_id(conn)
@@ -34,11 +39,10 @@ defmodule ApiBlogsWeb.PostController do
 
   def show(conn, %{"id" => id}) do
     try do
-      post = Blog.get_post!(id)
       post_user =
-        [post]
+        id
+        |> Blog.get_post!()
         |> get_post_user()
-        |> hd()
       render(conn, "show.json", post_user: post_user)
     rescue
       Ecto.NoResultsError -> {:error, :nonexistent_post}
