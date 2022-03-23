@@ -30,23 +30,17 @@ defmodule ApiBlogsWeb.Router do
   scope "/api", ApiBlogsWeb do
     pipe_through :api
 
-    #resources "/users", UserController, except: [:new, :edit]
-    #resources "/posts", PostController, except: [:new, :edit]
-    get "/post", PostController, :index
-    get "/post/:id", PostController, :show
-
-    post "/user", UserController, :create
+    resources "/user", UserController, only: [:create]
     post "/login", UserController, :login
   end
 
   scope "/api", ApiBlogsWeb do
     pipe_through [:api, :jwt_authenticated]
 
-    get "/user", UserController, :index
-    get "/user/:id", UserController, :show
+    resources "/user", UserController, only: [:index, :show]
     delete "/user/me", UserController, :delete
 
-    post "/post", PostController, :create
+    resources "/post", PostController, only: [:create, :index, :show, :update, :delete]
   end
 
   # Enables LiveDashboard only for development

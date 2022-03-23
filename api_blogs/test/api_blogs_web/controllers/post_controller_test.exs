@@ -9,30 +9,67 @@ defmodule ApiBlogsWeb.PostControllerTest do
     content: "The whole text for the blog post goes here in this key",
     title: "Latest updates, August 1st"
   }
+  @update_attrs %{
+    content: "blablabla",
+    title: "titulo"
+    }
   @user_create_attrs %{
     displayName: "rubens silva",
     email: "rubens@email.com",
     image: "http://4.bp.blogspot.com/_YA50adQ-7vQ/S1gfR_6ufpI/AAAAAAAAAAk/1ErJGgRWZDg/S45/brett.png",
     password: "123456"
   }
-  # @update_attrs %{
-  #   content: "some updated content",
-  #   published: ~N[2022-02-22 18:51:00],
-  #   title: "some updated title",
-  #   updated: ~N[2022-02-22 18:51:00]
-  # }
   # @invalid_attrs %{content: nil, published: nil, title: nil, updated: nil}
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
-  # describe "index" do
-  #   test "lists all posts", %{conn: conn} do
-  #     conn = get(conn, Routes.post_path(conn, :index))
-  #     assert json_response(conn, 200)["data"] == []
-  #   end
-  # end
+  describe "list posts" do
+    setup [:add_posts]
+
+    test "renders all posts", %{conn: conn} do
+      conn = get(conn, Routes.post_path(conn, :index))
+
+      assert %{
+        "data" => [
+          %{
+            "content" => "The whole text for the blog post goes here in this key",
+            "title" => "Latest updates, August 1st",
+            "user" => %{
+              "displayName" => "rubens silva",
+              "email" => "rubens@email.com",
+              "image" => "http://4.bp.blogspot.com/_YA50adQ-7vQ/S1gfR_6ufpI/AAAAAAAAAAk/1ErJGgRWZDg/S45/brett.png"
+            }
+          },
+          %{
+            "content" => "blablabla",
+            "title" => "titulo",
+            "user" => %{
+              "displayName" => "rubens silva",
+              "email" => "rubens@email.com",
+              "image" => "http://4.bp.blogspot.com/_YA50adQ-7vQ/S1gfR_6ufpI/AAAAAAAAAAk/1ErJGgRWZDg/S45/brett.png"
+            }
+          }
+        ]
+      } = json_response(conn, 200)
+    end
+
+    test "renders errors when jwt is invalid", %{conn: conn} do
+      conn =
+        build_conn()
+        |> put_invalid_jwt_header()
+        |> get(Routes.post_path(conn, :index))
+      assert %{"message" => "Token expirado ou invalido"} = json_response(conn, 401)
+    end
+
+    test "renders errors when jwt is missing", %{conn: conn} do
+      conn =
+        build_conn()
+        |> get(Routes.post_path(conn, :index))
+      assert %{"message" => "Token nao encontrado"} = json_response(conn, 401)
+    end
+  end
 
   describe "create post" do
     setup [:add_user_jwt]
@@ -129,6 +166,18 @@ defmodule ApiBlogsWeb.PostControllerTest do
   defp add_user_jwt %{conn: conn} do
     conn = post(conn, Routes.user_path(conn, :create), user: @user_create_attrs)
     {:ok, conn: build_conn(), jwt: get_jwt_from_conn_header(conn)}
+  end
+
+  defp add_posts %{conn: conn} do
+    {:ok, conn: conn, jwt: jwt} = add_user_jwt(%{conn: conn})
+
+    conn =
+      build_conn()
+      |> put_valid_jwt_header(jwt)
+      |> post(Routes.post_path(conn, :create), post: @create_attrs)
+      |> post(Routes.post_path(conn, :create), post: @update_attrs)
+
+    {:ok, conn: conn}
   end
 
   defp get_jwt_from_conn_header(conn) do
