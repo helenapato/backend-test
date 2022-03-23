@@ -1,7 +1,6 @@
 defmodule ApiBlogsWeb.PostView do
   use ApiBlogsWeb, :view
   alias ApiBlogsWeb.PostView
-  alias ApiBlogs.Blog
 
   def render("index.json", %{posts_users: posts_users}) do
     %{data: render_many(posts_users, PostView, "post.json")}
