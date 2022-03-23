@@ -8,8 +8,17 @@ defmodule ApiBlogsWeb.PostController do
   action_fallback ApiBlogsWeb.FallbackController
 
   def index(conn, _params) do
-    posts = Blog.list_posts()
-    render(conn, "index.json", posts: posts)
+    posts_users =
+      Blog.list_posts()
+      |> get_post_user()
+    render(conn, "index.json", posts_users: posts_users)
+  end
+
+  defp get_post_user([]), do: []
+  defp get_post_user([post | posts]) do
+    with user <- Blog.get_user!(post.user_id) do
+      [ %{post: post, user: user} | get_post_user(posts)]
+    end
   end
 
   def create(conn, %{"post" => post_params}) do
