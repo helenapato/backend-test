@@ -53,4 +53,11 @@ defmodule ApiBlogsWeb.FallbackController do
     |> put_view(ApiBlogsWeb.ErrorView)
     |> json(%{message: "Usuario nao existe"})
   end
+
+  def call(conn, {:error, :nonexistent_post}) do
+    conn
+    |> put_status(:not_found)
+    |> put_view(ApiBlogsWeb.ErrorView)
+    |> json(%{message: "Post nao existe"})
+  end
 end
