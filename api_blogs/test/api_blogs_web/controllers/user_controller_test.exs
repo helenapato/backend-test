@@ -137,7 +137,7 @@ defmodule ApiBlogsWeb.UserControllerTest do
         password: "123456"
       }
       conn = post(conn, Routes.user_path(conn, :login), user: invalid_attrs)
-      assert %{"message" => "email and password are required"} = json_response(conn, 400)
+      assert %{"message" => "\"email\" is required"} = json_response(conn, 400)
     end
 
     test "renders errors when no password is provided", %{conn: conn} do
@@ -145,7 +145,7 @@ defmodule ApiBlogsWeb.UserControllerTest do
         email: "rubens@email.com"
       }
       conn = post(conn, Routes.user_path(conn, :login), user: invalid_attrs)
-      assert %{"message" => "email and password are required"} = json_response(conn, 400)
+      assert %{"message" => "\"password\" is required"} = json_response(conn, 400)
     end
 
     test "renders errors when email is blank", %{conn: conn} do
@@ -154,7 +154,7 @@ defmodule ApiBlogsWeb.UserControllerTest do
         password: "123456"
       }
       conn = post(conn, Routes.user_path(conn, :login), user: invalid_attrs)
-      assert %{"message" => "email and password are required"} = json_response(conn, 400)
+      assert %{"message" => "\"email\" is not allowed to be empty"} = json_response(conn, 400)
     end
 
     test "renders errors when password is blank", %{conn: conn} do
@@ -163,7 +163,7 @@ defmodule ApiBlogsWeb.UserControllerTest do
         password: ""
       }
       conn = post(conn, Routes.user_path(conn, :login), user: invalid_attrs)
-      assert %{"message" => "email and password are required"} = json_response(conn, 400)
+      assert %{"message" => "\"password\" is not allowed to be empty"} = json_response(conn, 400)
     end
 
     test "renders errors when password is wrong", %{conn: conn} do

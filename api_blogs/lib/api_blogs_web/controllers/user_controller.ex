@@ -26,7 +26,7 @@ defmodule ApiBlogsWeb.UserController do
       user = Blog.get_user!(id)
       render(conn, "show.json", user: user)
     rescue
-      Ecto.NoResultsError -> {:error, :nonexistent_user}
+      Ecto.NoResultsError -> {:error, :not_found, "Usuario nao existe"}
     end
   end
 

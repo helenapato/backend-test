@@ -45,7 +45,7 @@ defmodule ApiBlogsWeb.PostController do
         |> get_post_user()
       render(conn, "show.json", post_user: post_user)
     rescue
-      Ecto.NoResultsError -> {:error, :nonexistent_post}
+      Ecto.NoResultsError -> {:error, :not_found, "Post nao existe"}
     end
   end
 

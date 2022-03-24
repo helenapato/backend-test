@@ -26,38 +26,18 @@ defmodule ApiBlogsWeb.FallbackController do
   end
 
   # This clause is an example of how to handle resources that cannot be found.
+
+  def call(conn, {:error, error, message}) do
+    conn
+    |> put_status(error)
+    |> put_view(ApiBlogsWeb.ErrorView)
+    |> json(%{message: message})
+  end
+
   def call(conn, {:error, :not_found}) do
     conn
     |> put_status(:not_found)
     |> put_view(ApiBlogsWeb.ErrorView)
     |> render(:"404")
-  end
-
-  def call(conn, {:error, :login_invalid_entry}) do
-    conn
-    |> put_status(:bad_request)
-    |> put_view(ApiBlogsWeb.ErrorView)
-    |> json(%{message: "Campos invalidos"})
-  end
-
-  def call(conn, {:error, :login_missing_info}) do
-    conn
-    |> put_status(:bad_request)
-    |> put_view(ApiBlogsWeb.ErrorView)
-    |> json(%{message: "email and password are required"})
-  end
-
-  def call(conn, {:error, :nonexistent_user}) do
-    conn
-    |> put_status(:not_found)
-    |> put_view(ApiBlogsWeb.ErrorView)
-    |> json(%{message: "Usuario nao existe"})
-  end
-
-  def call(conn, {:error, :nonexistent_post}) do
-    conn
-    |> put_status(:not_found)
-    |> put_view(ApiBlogsWeb.ErrorView)
-    |> json(%{message: "Post nao existe"})
   end
 end
