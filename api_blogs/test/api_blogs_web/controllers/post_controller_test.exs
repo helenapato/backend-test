@@ -25,6 +25,49 @@ defmodule ApiBlogsWeb.PostControllerTest do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
+  describe "create post" do
+    setup [:add_user_jwt]
+
+    test "renders post when data is valid", %{conn: conn} do
+      conn = post(conn, Routes.post_path(conn, :create), post: @create_attrs)
+      assert %{
+        "content" => "The whole text for the blog post goes here in this key",
+        "title" => "Latest updates, August 1st"
+      } = json_response(conn, 201)
+    end
+
+    test "renders errors when no title is provided", %{conn: conn} do
+      invalid_attrs = %{
+        content: "The whole text for the blog post goes here in this key"
+      }
+      conn = post(conn, Routes.post_path(conn, :create), post: invalid_attrs)
+      assert %{"errors" => %{"title" => ["can't be blank"]}} = json_response(conn, 400)
+    end
+
+    test "renders errors when no content is provided", %{conn: conn} do
+      invalid_attrs = %{
+        title: "Latest updates, August 1st"
+      }
+      conn = post(conn, Routes.post_path(conn, :create), post: invalid_attrs)
+      assert %{"errors" => %{"content" => ["can't be blank"]}} = json_response(conn, 400)
+    end
+
+    test "renders errors when jwt is invalid", %{conn: conn} do
+      conn =
+        build_conn()
+        |> put_invalid_jwt_header()
+        |> post(Routes.post_path(conn, :create), post: @create_attrs)
+      assert %{"message" => "Token expirado ou invalido"} = json_response(conn, 401)
+    end
+
+    test "renders errors when jwt is missing", %{conn: conn} do
+      conn =
+        build_conn()
+        |> post(Routes.post_path(conn, :create), post: @create_attrs)
+      assert %{"message" => "Token nao encontrado"} = json_response(conn, 401)
+    end
+  end
+
   describe "list posts" do
     setup [:add_2_posts]
 
@@ -71,58 +114,8 @@ defmodule ApiBlogsWeb.PostControllerTest do
     end
   end
 
-  describe "create post" do
-    setup [:add_user_jwt]
-
-    test "renders post when data is valid", %{conn: conn, jwt: jwt} do
-      conn =
-        conn
-        |> put_valid_jwt_header(jwt)
-        |> post(Routes.post_path(conn, :create), post: @create_attrs)
-      assert %{
-        "content" => "The whole text for the blog post goes here in this key",
-        "title" => "Latest updates, August 1st"
-      } = json_response(conn, 201)
-    end
-
-    test "renders errors when no title is provided", %{conn: conn, jwt: jwt} do
-      invalid_attrs = %{
-        content: "The whole text for the blog post goes here in this key"
-      }
-      conn =
-        conn
-        |> put_valid_jwt_header(jwt)
-        |> post(Routes.post_path(conn, :create), post: invalid_attrs)
-      assert %{"errors" => %{"title" => ["can't be blank"]}} = json_response(conn, 400)
-    end
-
-    test "renders errors when no content is provided", %{conn: conn, jwt: jwt} do
-      invalid_attrs = %{
-        title: "Latest updates, August 1st"
-      }
-      conn =
-        conn
-        |> put_valid_jwt_header(jwt)
-        |> post(Routes.post_path(conn, :create), post: invalid_attrs)
-      assert %{"errors" => %{"content" => ["can't be blank"]}} = json_response(conn, 400)
-    end
-
-    test "renders errors when jwt is invalid", %{conn: conn} do
-      conn =
-        conn
-        |> put_invalid_jwt_header()
-        |> post(Routes.post_path(conn, :create), post: @create_attrs)
-      assert %{"message" => "Token expirado ou invalido"} = json_response(conn, 401)
-    end
-
-    test "renders errors when jwt is missing", %{conn: conn} do
-      conn = post(conn, Routes.post_path(conn, :create), post: @create_attrs)
-      assert %{"message" => "Token nao encontrado"} = json_response(conn, 401)
-    end
-  end
-
   describe "get post by id" do
-    setup [:add_post]
+    setup [:add_post_id]
 
     test "renders post info", %{conn: conn, id: id} do
       conn = get(conn, Routes.post_path(conn, :show, id))
@@ -205,37 +198,39 @@ defmodule ApiBlogsWeb.PostControllerTest do
   # end
 
   defp add_user_jwt %{conn: conn} do
-    conn = post(conn, Routes.user_path(conn, :create), user: @user_create_attrs)
-    {:ok, conn: build_conn(), jwt: get_jwt_from_conn_header(conn)}
-  end
-
-  defp add_post %{conn: conn} do
-    {:ok, conn: conn, jwt: jwt} = add_user_jwt(%{conn: conn})
+    jwt =
+      conn
+      |> post(Routes.user_path(conn, :create), user: @user_create_attrs)
+      |> get_jwt_from_conn_response()
 
     conn =
       build_conn()
       |> put_valid_jwt_header(jwt)
-      |> post(Routes.post_path(conn, :create), post: @create_attrs)
-      |> get(Routes.post_path(conn, :index))
 
+    {:ok, conn: conn}
+  end
+
+  defp add_post %{conn: conn} do
+    {:ok, conn: conn} = add_user_jwt(%{conn: conn})
+    conn = post(conn, Routes.post_path(conn, :create), post: @create_attrs)
+    {:ok, conn: conn}
+  end
+
+  defp add_post_id %{conn: conn} do
+    {:ok, conn: conn} = add_post(%{conn: conn})
+    conn = get(conn, Routes.post_path(conn, :index))
     %{"data" => [%{"id" => id}]} = json_response(conn, 200)
     {:ok, conn: conn, id: id}
   end
 
   defp add_2_posts %{conn: conn} do
-    {:ok, conn: conn, jwt: jwt} = add_user_jwt(%{conn: conn})
-
-    conn =
-      build_conn()
-      |> put_valid_jwt_header(jwt)
-      |> post(Routes.post_path(conn, :create), post: @create_attrs)
-      |> post(Routes.post_path(conn, :create), post: @update_attrs)
-
+    {:ok, conn: conn} = add_post(%{conn: conn})
+    conn = post(conn, Routes.post_path(conn, :create), post: @update_attrs)
     {:ok, conn: conn}
   end
 
-  defp get_jwt_from_conn_header(conn) do
-    [_ | [_ | [_ | [jwt | _]]]] = String.split(conn.resp_body, "\"")
+  defp get_jwt_from_conn_response(conn) do
+    %{"jwt" => jwt} = json_response(conn, 201)
     jwt
   end
 
