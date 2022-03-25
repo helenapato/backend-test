@@ -6,8 +6,8 @@ defmodule ApiBlogsWeb.PostView do
     %{data: render_many(posts_users, PostView, "post.json")}
   end
 
-  def render("show.json", %{post: post}) do
-    %{data: render_one(post, PostView, "post.json")}
+  def render("show.json", %{post_user: post_user}) do
+    %{data: render_one(post_user, PostView, "post.json")}
   end
 
   def render("post.json", %{post: %{post: post, user: user}}) do

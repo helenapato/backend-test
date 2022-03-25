@@ -22,13 +22,13 @@ defmodule ApiBlogsWeb.UserController do
   end
 
   def show(conn, %{"id" => id}) do
-    try do
-      user = Blog.get_user!(id)
-      render(conn, "show.json", user: user)
-    rescue
-      Ecto.NoResultsError -> {:error, :nonexistent_user}
-    end
+    id
+    |> Blog.get_user()
+    |> user_exists(conn)
   end
+
+  defp user_exists(nil, _conn), do: {:error, :not_found, "Usuario nao existe"}
+  defp user_exists(user, conn), do: render(conn, "show.json", user: user)
 
   # def update(conn, %{"id" => id, "user" => user_params}) do
   #   user = Blog.get_user!(id)

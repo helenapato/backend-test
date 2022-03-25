@@ -11,62 +11,25 @@ defmodule ApiBlogsWeb.UserControllerTest do
     image: "http://4.bp.blogspot.com/_YA50adQ-7vQ/S1gfR_6ufpI/AAAAAAAAAAk/1ErJGgRWZDg/S45/brett.png",
     password: "123456"
   }
-  # @update_attrs %{
-  #   displayName: "some updated displayName",
-  #   email: "some updated email",
-  #   image: "some updated image",
-  #   password: "some updated password"
-  # }
-  # @invalid_attrs %{displayName: nil, email: nil, image: nil, password: nil}
+  @update_attrs %{
+    displayName: "maria silva",
+    email: "maria@email.com",
+    image: "image.png",
+    password: "654321"
+  }
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
-  describe "list all users" do
-    test "renders two users", %{conn: conn} do
-      new_user = %{
-        displayName: "maria silva",
-        email: "maria@email.com",
-        password: "654321"
-      }
-
-      conn =
-        conn
-        |> post(Routes.user_path(conn, :create), user: @create_attrs)
-        |> post(Routes.user_path(conn, :create), user: new_user)
-
-      conn =
-        build_conn()
-        |> put_valid_jwt_header(get_jwt_from_conn_header(conn))
-        |> get(Routes.user_path(conn, :index))
-
-      assert %{"data" => [ %{"email" => "rubens@email.com"} | [ %{"email" => "maria@email.com"} | _ ]]} = json_response(conn, 200)
-    end
-
-    test "renders errors when jwt is invalid", %{conn: conn} do
-      conn =
-        conn
-        |> put_invalid_jwt_header()
-        |> get(Routes.user_path(conn, :index))
-
-      assert %{"message" => "Token expirado ou invalido"} = json_response(conn, 401)
-    end
-
-    test "renders errors when jwt is missing", %{conn: conn} do
-      conn = get(conn, Routes.user_path(conn, :index))
-      assert %{"message" => "Token nao encontrado"} = json_response(conn, 401)
-    end
-  end
-
   describe "create user" do
     test "renders jwt when data is valid", %{conn: conn} do
       conn = post(conn, Routes.user_path(conn, :create), user: @create_attrs)
-      assert %{"jwt" => _} = json_response(conn, 201)
+      assert %{"jwt" => jwt} = json_response(conn, 201)
 
       conn =
         build_conn()
-        |> put_valid_jwt_header(get_jwt_from_conn_header(conn))
+        |> put_valid_jwt_header(jwt)
         |> get(Routes.user_path(conn, :index))
 
       assert %{"data" => [%{"id" => id}]} = json_response(conn, 200)
@@ -157,45 +120,149 @@ defmodule ApiBlogsWeb.UserControllerTest do
     end
   end
 
-  describe "get user by id" do
-    setup [:add_user_jwt]
+  describe "user login" do
+    setup [:add_user]
 
-    test "renders user info", %{conn: conn, jwt: jwt} do
+    test "renders jwt when data is valid", %{conn: conn} do
+      valid_attrs = %{
+        email: "rubens@email.com",
+        password: "123456"
+      }
+      conn = post(conn, Routes.user_path(conn, :login), user: valid_attrs)
+      assert %{"jwt" => _} = json_response(conn, 200)
+    end
+
+    test "renders errors when no email is provided", %{conn: conn} do
+      invalid_attrs = %{
+        password: "123456"
+      }
+      conn = post(conn, Routes.user_path(conn, :login), user: invalid_attrs)
+      assert %{"message" => "\"email\" is required"} = json_response(conn, 400)
+    end
+
+    test "renders errors when no password is provided", %{conn: conn} do
+      invalid_attrs = %{
+        email: "rubens@email.com"
+      }
+      conn = post(conn, Routes.user_path(conn, :login), user: invalid_attrs)
+      assert %{"message" => "\"password\" is required"} = json_response(conn, 400)
+    end
+
+    test "renders errors when email is blank", %{conn: conn} do
+      invalid_attrs = %{
+        email: "",
+        password: "123456"
+      }
+      conn = post(conn, Routes.user_path(conn, :login), user: invalid_attrs)
+      assert %{"message" => "\"email\" is not allowed to be empty"} = json_response(conn, 400)
+    end
+
+    test "renders errors when password is blank", %{conn: conn} do
+      invalid_attrs = %{
+        email: "rubens@email.com",
+        password: ""
+      }
+      conn = post(conn, Routes.user_path(conn, :login), user: invalid_attrs)
+      assert %{"message" => "\"password\" is not allowed to be empty"} = json_response(conn, 400)
+    end
+
+    test "renders errors when password is wrong", %{conn: conn} do
+      invalid_attrs = %{
+        email: "rubens@email.com",
+        password: "1234567"
+      }
+      conn = post(conn, Routes.user_path(conn, :login), user: invalid_attrs)
+      assert %{"message" => "Campos invalidos"} = json_response(conn, 400)
+    end
+
+    test "renders errors when user doesn't exist", %{conn: conn} do
+      invalid_attrs = %{
+        email: "maria@email.com",
+        password: "1234567"
+      }
+      conn = post(conn, Routes.user_path(conn, :login), user: invalid_attrs)
+      assert %{"message" => "Campos invalidos"} = json_response(conn, 400)
+    end
+  end
+
+  describe "list all users" do
+    setup [:add_2_users]
+
+    test "renders all users", %{conn: conn} do
+      conn = get(conn, Routes.user_path(conn, :index))
+      assert %{"data" => [ %{"email" => "rubens@email.com"} | [ %{"email" => "maria@email.com"} ]]} = json_response(conn, 200)
+    end
+
+    test "renders errors when jwt is invalid", %{conn: conn} do
       conn =
-        conn
-        |> put_valid_jwt_header(jwt)
+        build_conn()
+        |> put_invalid_jwt_header()
         |> get(Routes.user_path(conn, :index))
 
-      assert %{"data" => [%{"id" => id}]} = json_response(conn, 200)
+      assert %{"message" => "Token expirado ou invalido"} = json_response(conn, 401)
+    end
 
+    test "renders errors when jwt is missing", %{conn: conn} do
+      conn =
+        build_conn()
+        |> get(Routes.user_path(conn, :index))
+      assert %{"message" => "Token nao encontrado"} = json_response(conn, 401)
+    end
+  end
+
+  describe "get user by id" do
+    setup [:add_user_id]
+
+    test "renders user info", %{conn: conn, id: id} do
       conn = get(conn, Routes.user_path(conn, :show, id))
       assert %{"data" => %{"email" => "rubens@email.com"}} = json_response(conn, 200)
     end
 
-    test "renders errors when user doesn't exist", %{conn: conn, jwt: jwt} do
-      conn =
-        conn
-        |> put_valid_jwt_header(jwt)
-        |> get(Routes.user_path(conn, :index))
-
-      assert %{"data" => [%{"id" => id}]} = json_response(conn, 200)
+    test "renders errors when user doesn't exist", %{conn: conn, id: id} do
       invalid_id = id + 1
 
       conn = get(conn, Routes.user_path(conn, :show, invalid_id))
       assert %{"message" => "Usuario nao existe"} = json_response(conn, 404)
     end
 
+    test "renders errors when jwt is invalid", %{conn: conn, id: id} do
+      conn =
+        build_conn()
+        |> put_invalid_jwt_header()
+        |> get(Routes.user_path(conn, :show, id))
+
+      assert %{"message" => "Token expirado ou invalido"} = json_response(conn, 401)
+    end
+
+    test "renders errors when jwt is missing", %{conn: conn, id: id} do
+      conn =
+        build_conn()
+        |> get(Routes.user_path(conn, :show, id))
+      assert %{"message" => "Token nao encontrado"} = json_response(conn, 401)
+    end
+  end
+
+  describe "delete user" do
+    setup [:add_user_jwt]
+
+    test "renders deleted user", %{conn: conn} do
+      conn = delete(conn, Routes.user_path(conn, :delete))
+      assert "" = response(conn, 204)
+    end
+
     test "renders errors when jwt is invalid", %{conn: conn} do
       conn =
-        conn
+        build_conn()
         |> put_invalid_jwt_header()
-        |> get(Routes.user_path(conn, :show, 1))
+        |> delete(Routes.user_path(conn, :delete))
 
       assert %{"message" => "Token expirado ou invalido"} = json_response(conn, 401)
     end
 
     test "renders errors when jwt is missing", %{conn: conn} do
-      conn = get(conn, Routes.user_path(conn, :show, 1))
+      conn =
+        build_conn()
+        |> delete(Routes.user_path(conn, :delete))
       assert %{"message" => "Token nao encontrado"} = json_response(conn, 401)
     end
   end
@@ -224,98 +291,6 @@ defmodule ApiBlogsWeb.UserControllerTest do
   #   end
   # end
 
-  describe "delete user" do
-    setup [:add_user_jwt]
-
-    test "renders deleted user", %{conn: conn, jwt: jwt} do
-      conn =
-        conn
-        |> put_valid_jwt_header(jwt)
-        |> delete(Routes.user_path(conn, :delete))
-
-      assert "" = response(conn, 204)
-    end
-
-    test "renders errors when jwt is invalid", %{conn: conn} do
-      conn =
-        conn
-        |> put_invalid_jwt_header()
-        |> delete(Routes.user_path(conn, :delete))
-
-      assert %{"message" => "Token expirado ou invalido"} = json_response(conn, 401)
-    end
-
-    test "renders errors when jwt is missing", %{conn: conn} do
-      conn = delete(conn, Routes.user_path(conn, :delete))
-      assert %{"message" => "Token nao encontrado"} = json_response(conn, 401)
-    end
-  end
-
-  describe "user login" do
-    setup [:add_user]
-
-    test "renders jwt when data is valid", %{conn: conn} do
-      valid_attrs = %{
-        email: "rubens@email.com",
-        password: "123456"
-      }
-      conn = post(conn, Routes.user_path(conn, :login), user: valid_attrs)
-      assert %{"jwt" => _} = json_response(conn, 200)
-    end
-
-    test "renders errors when no email is provided", %{conn: conn} do
-      invalid_attrs = %{
-        password: "123456"
-      }
-      conn = post(conn, Routes.user_path(conn, :login), user: invalid_attrs)
-      assert %{"message" => "email and password are required"} = json_response(conn, 400)
-    end
-
-    test "renders errors when no password is provided", %{conn: conn} do
-      invalid_attrs = %{
-        email: "rubens@email.com"
-      }
-      conn = post(conn, Routes.user_path(conn, :login), user: invalid_attrs)
-      assert %{"message" => "email and password are required"} = json_response(conn, 400)
-    end
-
-    test "renders errors when email is blank", %{conn: conn} do
-      invalid_attrs = %{
-        email: "",
-        password: "123456"
-      }
-      conn = post(conn, Routes.user_path(conn, :login), user: invalid_attrs)
-      assert %{"message" => "email and password are required"} = json_response(conn, 400)
-    end
-
-    test "renders errors when password is blank", %{conn: conn} do
-      invalid_attrs = %{
-        email: "rubens@email.com",
-        password: ""
-      }
-      conn = post(conn, Routes.user_path(conn, :login), user: invalid_attrs)
-      assert %{"message" => "email and password are required"} = json_response(conn, 400)
-    end
-
-    test "renders errors when password is wrong", %{conn: conn} do
-      invalid_attrs = %{
-        email: "rubens@email.com",
-        password: "1234567"
-      }
-      conn = post(conn, Routes.user_path(conn, :login), user: invalid_attrs)
-      assert %{"message" => "Campos invalidos"} = json_response(conn, 400)
-    end
-
-    test "renders errors when user doesn't exist", %{conn: conn} do
-      invalid_attrs = %{
-        email: "maria@email.com",
-        password: "1234567"
-      }
-      conn = post(conn, Routes.user_path(conn, :login), user: invalid_attrs)
-      assert %{"message" => "Campos invalidos"} = json_response(conn, 400)
-    end
-  end
-
   # defp create_user(_) do
   #   user = user_fixture()
   #   %{user: user}
@@ -326,12 +301,36 @@ defmodule ApiBlogsWeb.UserControllerTest do
   end
 
   defp add_user_jwt %{conn: conn} do
-    conn = post(conn, Routes.user_path(conn, :create), user: @create_attrs)
-    {:ok, conn: build_conn(), jwt: get_jwt_from_conn_header(conn)}
+    {:ok, conn: conn} = add_user(%{conn: conn})
+    jwt = get_jwt_from_conn_response(conn)
+
+    conn =
+      build_conn()
+      |> put_valid_jwt_header(jwt)
+
+    {:ok, conn: conn}
   end
 
-  defp get_jwt_from_conn_header(conn) do
-    [_ | [_ | [_ | [jwt | _]]]] = String.split(conn.resp_body, "\"")
+  defp add_user_id %{conn: conn} do
+    {:ok, conn: conn} = add_user_jwt(%{conn: conn})
+
+    conn = get(conn, Routes.user_path(conn, :index))
+    %{"data" => [%{"id" => id}]} = json_response(conn, 200)
+
+    {:ok, conn: conn, id: id}
+  end
+
+  defp add_2_users %{conn: conn} do
+    {:ok, conn: conn} = add_user_jwt(%{conn: conn})
+    conn =
+      conn
+      |> post(Routes.user_path(conn, :create), user: @update_attrs)
+
+    {:ok, conn: conn}
+  end
+
+  defp get_jwt_from_conn_response(conn) do
+    %{"jwt" => jwt} = json_response(conn, 201)
     jwt
   end
 

@@ -36,6 +36,7 @@ defmodule ApiBlogs.Blog do
 
   """
   def get_user!(id), do: Repo.get!(User, id)
+  def get_user(id), do: Repo.get(User, id)
 
   @doc """
   Creates a user.
@@ -132,6 +133,7 @@ defmodule ApiBlogs.Blog do
 
   """
   def get_post!(id), do: Repo.get!(Post, id)
+  def get_post(id), do: Repo.get(Post, id)
 
   @doc """
   Creates a post.
@@ -201,19 +203,18 @@ defmodule ApiBlogs.Blog do
   @doc """
   User login.
   """
-  def do_login(%{"email" => "", "password" => _password}) do {:error, :login_missing_info} end
-  def do_login(%{"email" => _email, "password" => ""}) do {:error, :login_missing_info} end
+  def do_login(%{"email" => "", "password" => _password}), do: {:error, :bad_request, "\"email\" is not allowed to be empty"}
+  def do_login(%{"email" => _email, "password" => ""}), do: {:error, :bad_request, "\"password\" is not allowed to be empty"}
   def do_login(%{"email" => email, "password" => password}) do
-    user = Repo.get_by(User, email: email)
-    if user == nil do
-      {:error, :login_invalid_entry}
-    else
-      if user.password != password do
-        {:error, :login_invalid_entry}
-      else
-        {:ok, user}
-      end
-    end
+    User
+    |> Repo.get_by(email: email)
+    |> validate_login(password)
   end
-  def do_login(_attrs) do {:error, :login_missing_info} end
+  def do_login(%{"email" => _email}), do: {:error, :bad_request, "\"password\" is required"}
+  def do_login(%{"password" => _password}), do: {:error, :bad_request, "\"email\" is required"}
+
+  defp validate_login(nil, _password), do: {:error, :bad_request, "Campos invalidos"}
+  defp validate_login(user, password) when user.password != password, do: {:error, :bad_request, "Campos invalidos"}
+  defp validate_login(user, _password), do: {:ok, user}
+
 end

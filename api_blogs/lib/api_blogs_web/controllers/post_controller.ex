@@ -20,6 +20,11 @@ defmodule ApiBlogsWeb.PostController do
       [ %{post: post, user: user} | get_post_user(posts)]
     end
   end
+  defp get_post_user(post) do
+    with user <- Blog.get_user!(post.user_id) do
+      %{post: post, user: user}
+    end
+  end
 
   def create(conn, %{"post" => post_params}) do
     {:ok, %{"sub" => id}} = UserController.extract_id(conn)
@@ -33,9 +38,13 @@ defmodule ApiBlogsWeb.PostController do
   end
 
   def show(conn, %{"id" => id}) do
-    post = Blog.get_post!(id)
-    render(conn, "show.json", post: post)
+    id
+    |> Blog.get_post()
+    |> post_exists(conn)
   end
+
+  defp post_exists(nil, _conn), do: {:error, :not_found, "Post nao existe"}
+  defp post_exists(post, conn), do: render(conn, "show.json", post_user: get_post_user(post))
 
   def update(conn, %{"id" => id, "post" => post_params}) do
     post = Blog.get_post!(id)
