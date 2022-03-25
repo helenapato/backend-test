@@ -38,16 +38,13 @@ defmodule ApiBlogsWeb.PostController do
   end
 
   def show(conn, %{"id" => id}) do
-    try do
-      post_user =
-        id
-        |> Blog.get_post!()
-        |> get_post_user()
-      render(conn, "show.json", post_user: post_user)
-    rescue
-      Ecto.NoResultsError -> {:error, :not_found, "Post nao existe"}
-    end
+    id
+    |> Blog.get_post()
+    |> post_exists(conn)
   end
+
+  defp post_exists(nil, _conn), do: {:error, :not_found, "Post nao existe"}
+  defp post_exists(post, conn), do: render(conn, "show.json", post_user: get_post_user(post))
 
   def update(conn, %{"id" => id, "post" => post_params}) do
     post = Blog.get_post!(id)

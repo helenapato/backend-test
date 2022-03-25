@@ -36,6 +36,7 @@ defmodule ApiBlogs.Blog do
 
   """
   def get_user!(id), do: Repo.get!(User, id)
+  def get_user(id), do: Repo.get(User, id)
 
   @doc """
   Creates a user.
@@ -132,6 +133,7 @@ defmodule ApiBlogs.Blog do
 
   """
   def get_post!(id), do: Repo.get!(Post, id)
+  def get_post(id), do: Repo.get(Post, id)
 
   @doc """
   Creates a post.
