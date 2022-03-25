@@ -204,18 +204,15 @@ defmodule ApiBlogs.Blog do
   def do_login(%{"email" => "", "password" => _password}), do: {:error, :bad_request, "\"email\" is not allowed to be empty"}
   def do_login(%{"email" => _email, "password" => ""}), do: {:error, :bad_request, "\"password\" is not allowed to be empty"}
   def do_login(%{"email" => email, "password" => password}) do
-    user = Repo.get_by(User, email: email)
-    if user == nil do
-      {:error, :bad_request, "Campos invalidos"}
-    else
-      if user.password != password do
-        {:error, :bad_request, "Campos invalidos"}
-      else
-        {:ok, user}
-      end
-    end
+    User
+    |> Repo.get_by(email: email)
+    |> validate_login(password)
   end
   def do_login(%{"email" => _email}), do: {:error, :bad_request, "\"password\" is required"}
   def do_login(%{"password" => _password}), do: {:error, :bad_request, "\"email\" is required"}
+
+  defp validate_login(nil, _password), do: {:error, :bad_request, "Campos invalidos"}
+  defp validate_login(user, password) when user.password != password, do: {:error, :bad_request, "Campos invalidos"}
+  defp validate_login(user, _password), do: {:ok, user}
 
 end
