@@ -19,7 +19,12 @@ defmodule ApiBlogsWeb.PostControllerTest do
     image: "http://4.bp.blogspot.com/_YA50adQ-7vQ/S1gfR_6ufpI/AAAAAAAAAAk/1ErJGgRWZDg/S45/brett.png",
     password: "123456"
   }
-  # @invalid_attrs %{content: nil, published: nil, title: nil, updated: nil}
+  @user_update_attrs %{
+    displayName: "maria silva",
+    email: "maria@email.com",
+    image: "image.png",
+    password: "654321"
+  }
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
@@ -155,29 +160,70 @@ defmodule ApiBlogsWeb.PostControllerTest do
     end
   end
 
-  # describe "update post" do
-  #   setup [:create_post]
+  describe "update post" do
+    setup [:add_post_2_users]
 
-  #   test "renders post when data is valid", %{conn: conn, post: %Post{id: id} = post} do
-  #     conn = put(conn, Routes.post_path(conn, :update, post), post: @update_attrs)
-  #     assert %{"id" => ^id} = json_response(conn, 200)["data"]
+    test "renders post when data is valid", %{conn: conn, post: %{"id" => id} = post} do
+      conn =
+        conn
+        |> put(Routes.post_path(conn, :update, id, post), post: @update_attrs)
+        |> get(Routes.post_path(conn, :show, id))
 
-  #     conn = get(conn, Routes.post_path(conn, :show, id))
+      assert %{
+        "data" => %{
+          "content" => "blablabla",
+          "id" => ^id,
+          "title" => "titulo"
+        }
+      } = json_response(conn, 200)
+    end
 
-  #     assert %{
-  #              "id" => ^id,
-  #              "content" => "some updated content",
-  #              "published" => "2022-02-22T18:51:00",
-  #              "title" => "some updated title",
-  #              "updated" => "2022-02-22T18:51:00"
-  #            } = json_response(conn, 200)["data"]
-  #   end
+    test "renders errors when post doesn't exist", %{conn: conn, post: %{"id" => id} = post} do
+      invalid_id = id + 1
+      conn = put(conn, Routes.post_path(conn, :update, invalid_id, post), post: @update_attrs)
+      assert %{"message" => "Post nao existe"} = json_response(conn, 404)
+    end
 
-  #   test "renders errors when data is invalid", %{conn: conn, post: post} do
-  #     conn = put(conn, Routes.post_path(conn, :update, post), post: @invalid_attrs)
-  #     assert json_response(conn, 422)["errors"] != %{}
-  #   end
-  # end
+    test "renders errors when user is unauthorized", %{conn: conn, post: %{"id" => id} = post, jwt: jwt} do
+      conn =
+        build_conn()
+        |> put_valid_jwt_header(jwt)
+        |> put(Routes.post_path(conn, :update, id, post), post: @update_attrs)
+      assert %{"message" => "Usuario nao autorizado"} = json_response(conn, 401)
+    end
+
+    test "renders errors when no title is provided", %{conn: conn, post: %{"id" => id} = post} do
+      invalid_attrs = %{
+        content: "blablabla"
+      }
+      conn = put(conn, Routes.post_path(conn, :update, id, post), post: invalid_attrs)
+      assert %{"message" => "\"title\" is required"} = json_response(conn, 400)
+    end
+
+    test "renders errors when no content is provided", %{conn: conn, post: %{"id" => id} = post} do
+      invalid_attrs = %{
+        title: "title"
+      }
+      conn = put(conn, Routes.post_path(conn, :update, id, post), post: invalid_attrs)
+      assert %{"message" => "\"content\" is required"} = json_response(conn, 400)
+    end
+
+    test "renders errors when jwt is invalid", %{conn: conn, post: %{"id" => id} = post} do
+      conn =
+        build_conn()
+        |> put_invalid_jwt_header()
+        |> put(Routes.post_path(conn, :update, id, post), post: @update_attrs)
+
+      assert %{"message" => "Token expirado ou invalido"} = json_response(conn, 401)
+    end
+
+    test "renders errors when jwt is missing", %{conn: conn, post: %{"id" => id} = post} do
+      conn =
+        build_conn()
+        |> put(Routes.post_path(conn, :update, id, post), post: @update_attrs)
+      assert %{"message" => "Token nao encontrado"} = json_response(conn, 401)
+    end
+  end
 
   # describe "delete post" do
   #   setup [:create_post]
@@ -210,6 +256,17 @@ defmodule ApiBlogsWeb.PostControllerTest do
     {:ok, conn: conn}
   end
 
+  defp add_2_users %{conn: conn} do
+    {:ok, conn: conn} = add_user_jwt(%{conn: conn})
+
+    conn =
+      conn
+      |> post(Routes.user_path(conn, :create), user: @user_update_attrs)
+    jwt = get_jwt_from_conn_response(conn)
+
+    {:ok, conn: conn, jwt: jwt}
+  end
+
   defp add_post %{conn: conn} do
     {:ok, conn: conn} = add_user_jwt(%{conn: conn})
     conn = post(conn, Routes.post_path(conn, :create), post: @create_attrs)
@@ -221,6 +278,20 @@ defmodule ApiBlogsWeb.PostControllerTest do
     conn = get(conn, Routes.post_path(conn, :index))
     %{"data" => [%{"id" => id}]} = json_response(conn, 200)
     {:ok, conn: conn, id: id}
+  end
+
+  defp add_post_2_users %{conn: conn} do
+    {:ok, conn: conn, jwt: jwt} = add_2_users(%{conn: conn})
+    conn =
+      conn
+      |> post(Routes.post_path(conn, :create), post: @create_attrs)
+      |> get(Routes.post_path(conn, :index))
+    %{"data" => [%{"id" => id}]} = json_response(conn, 200)
+
+    conn = get(conn, Routes.post_path(conn, :show, id))
+    %{"data" => post} = json_response(conn, 200)
+
+    {:ok, conn: conn, post: post, jwt: jwt}
   end
 
   defp add_2_posts %{conn: conn} do

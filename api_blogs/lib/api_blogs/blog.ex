@@ -8,6 +8,8 @@ defmodule ApiBlogs.Blog do
 
   alias ApiBlogs.Blog.User
 
+  alias ApiBlogs.Guardian
+
   @doc """
   Returns the list of users.
 
@@ -36,6 +38,21 @@ defmodule ApiBlogs.Blog do
 
   """
   def get_user!(id), do: Repo.get!(User, id)
+
+  @doc """
+  Gets a single user.
+
+  Returns nil if the User does not exist.
+
+  ## Examples
+
+      iex> get_user!(123)
+      %User{}
+
+      iex> get_user!(456)
+      nil
+
+  """
   def get_user(id), do: Repo.get(User, id)
 
   @doc """
@@ -103,6 +120,11 @@ defmodule ApiBlogs.Blog do
     User.changeset(user, attrs)
   end
 
+  def extract_id(conn) do
+    conn.private[:guardian_default_token]
+    |> Guardian.decode_and_verify()
+  end
+
   alias ApiBlogs.Blog.Post
 
   @doc """
@@ -116,6 +138,24 @@ defmodule ApiBlogs.Blog do
   """
   def list_posts do
     Repo.all(Post)
+  end
+
+  def get_post_user([]), do: []
+  def get_post_user([post | posts]) do
+    with user <- get_user!(post.user_id) do
+      [ %{post: post, user: user} | get_post_user(posts)]
+    end
+  end
+  def get_post_user(post) do
+    with user <- get_user!(post.user_id) do
+      %{post: post, user: user}
+    end
+  end
+
+  def list_posts_with_users do
+    posts_users =
+      list_posts()
+      |> get_post_user()
   end
 
   @doc """
@@ -133,7 +173,28 @@ defmodule ApiBlogs.Blog do
 
   """
   def get_post!(id), do: Repo.get!(Post, id)
-  def get_post(id), do: Repo.get(Post, id)
+
+  @doc """
+  Gets a single post.
+
+  Returns error if the Post does not exist.
+
+  ## Examples
+
+      iex> get_post!(123)
+      %Post{}
+
+      iex> get_post!(456)
+      {:error, :not_found, "Post nao existe"}
+
+  """
+  def get_post(id) do
+    post = Repo.get(Post, id)
+    case post do
+      nil -> {:error, :not_found, "Post nao existe"}
+      _ -> {:ok, post}
+    end
+  end
 
   @doc """
   Creates a post.
@@ -153,6 +214,12 @@ defmodule ApiBlogs.Blog do
     |> Repo.insert()
   end
 
+  def add_params_create_post(conn, post_params) do
+    {:ok, %{"sub" => id}} = extract_id(conn)
+    new_post = Map.put(post_params, "user_id", id)
+    {:ok, new_post}
+  end
+
   @doc """
   Updates a post.
 
@@ -165,11 +232,30 @@ defmodule ApiBlogs.Blog do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_post(%Post{} = post, attrs) do
+  def update_post(%Post{} = post, %{"content" => _, "title" => _} = attrs) do
     post
     |> Post.changeset(attrs)
     |> Repo.update()
   end
+  def update_post(%Post{} = _post, %{"content" => _} = attrs), do: {:error, :bad_request, "\"title\" is required"}
+  def update_post(%Post{} = _post, %{"title" => _} = attrs), do: {:error, :bad_request, "\"content\" is required"}
+
+  def check_valid_update(conn, post, post_params) do
+    with {:ok, %{"sub" => user_id}} <- extract_id(conn),
+         int_user_id <- convert_string_to_int(user_id),
+         {:ok, %Post{} = post} <- check_valid_user(int_user_id, post) do
+      {:ok, post}
+    end
+  end
+
+  defp convert_string_to_int(string) do
+    string
+    |> Integer.parse()
+    |> elem(0)
+  end
+
+  defp check_valid_user(id, post) when id != post.user_id, do: {:error, :unauthorized, "Usuario nao autorizado"}
+  defp check_valid_user(_id, post), do: {:ok, post}
 
   @doc """
   Deletes a post.
