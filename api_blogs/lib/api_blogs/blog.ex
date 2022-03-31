@@ -62,7 +62,7 @@ defmodule ApiBlogs.Blog do
   end
 
   def get_user_from_conn(conn) do
-    with {:ok, %{"sub" => id}} <- extract_id(conn) do
+    with {:ok, id} <- extract_id(conn) do
       get_user(id)
     end
   end
@@ -133,7 +133,8 @@ defmodule ApiBlogs.Blog do
   end
 
   defp extract_id(%{private: %{guardian_default_token: token}}) do
-    Guardian.decode_and_verify(token)
+    {:ok, %{"sub" => id}} = Guardian.decode_and_verify(token)
+    {:ok, id}
   end
 
   alias ApiBlogs.Blog.Post
@@ -226,7 +227,7 @@ defmodule ApiBlogs.Blog do
   end
 
   def add_params_create_post(conn, post_params) do
-    {:ok, %{"sub" => id}} = extract_id(conn)
+    {:ok, id} = extract_id(conn)
     new_post = Map.put(post_params, "user_id", id)
     {:ok, new_post}
   end
@@ -252,7 +253,7 @@ defmodule ApiBlogs.Blog do
   def update_post(%Post{} = _post, %{"title" => _} = attrs), do: {:error, :bad_request, "\"content\" is required"}
 
   def check_valid_update(conn, post, post_params) do
-    with {:ok, %{"sub" => user_id}} <- extract_id(conn),
+    with {:ok, user_id} <- extract_id(conn),
          int_user_id <- convert_string_to_int(user_id),
          {:ok, %Post{} = post} <- check_valid_user(int_user_id, post) do
       {:ok, post}
