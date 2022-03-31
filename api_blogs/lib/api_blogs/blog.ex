@@ -120,9 +120,8 @@ defmodule ApiBlogs.Blog do
     User.changeset(user, attrs)
   end
 
-  def extract_id(conn) do
-    conn.private[:guardian_default_token]
-    |> Guardian.decode_and_verify()
+  def extract_id(%{private: %{guardian_default_token: token}}) do
+    Guardian.decode_and_verify(token)
   end
 
   alias ApiBlogs.Blog.Post
