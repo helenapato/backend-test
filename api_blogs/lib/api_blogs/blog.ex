@@ -42,18 +42,30 @@ defmodule ApiBlogs.Blog do
   @doc """
   Gets a single user.
 
-  Returns nil if the User does not exist.
+  Returns error if the User does not exist.
 
   ## Examples
 
-      iex> get_user!(123)
+      iex> get_user(123)
       %User{}
 
-      iex> get_user!(456)
-      nil
+      iex> get_user(456)
+      {:error, :not_found, "Usuario nao existe"}
 
   """
-  def get_user(id), do: Repo.get(User, id)
+  def get_user(id) do
+    user = Repo.get(User, id)
+    case user do
+      nil -> {:error, :not_found, "Usuario nao existe"}
+      _ -> {:ok, user}
+    end
+  end
+
+  def get_user_from_conn(conn) do
+    with {:ok, %{"sub" => id}} <- extract_id(conn) do
+      get_user(id)
+    end
+  end
 
   @doc """
   Creates a user.
@@ -120,7 +132,7 @@ defmodule ApiBlogs.Blog do
     User.changeset(user, attrs)
   end
 
-  def extract_id(%{private: %{guardian_default_token: token}}) do
+  defp extract_id(%{private: %{guardian_default_token: token}}) do
     Guardian.decode_and_verify(token)
   end
 
@@ -180,10 +192,10 @@ defmodule ApiBlogs.Blog do
 
   ## Examples
 
-      iex> get_post!(123)
+      iex> get_post(123)
       %Post{}
 
-      iex> get_post!(456)
+      iex> get_post(456)
       {:error, :not_found, "Post nao existe"}
 
   """

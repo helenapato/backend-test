@@ -22,13 +22,10 @@ defmodule ApiBlogsWeb.UserController do
   end
 
   def show(conn, %{"id" => id}) do
-    id
-    |> Blog.get_user()
-    |> user_exists(conn)
+    with {:ok, %User{} = user} <- Blog.get_user(id) do
+      render(conn, "show.json", user: user)
+    end
   end
-
-  defp user_exists(nil, _conn), do: {:error, :not_found, "Usuario nao existe"}
-  defp user_exists(user, conn), do: render(conn, "show.json", user: user)
 
   # def update(conn, %{"id" => id, "user" => user_params}) do
   #   user = Blog.get_user!(id)
@@ -39,11 +36,10 @@ defmodule ApiBlogsWeb.UserController do
   # end
 
   def delete(conn, _params) do
-    with {:ok, %{"sub" => id}} <- Blog.extract_id(conn),
-      user <- Blog.get_user!(id),
-      {:ok, %User{}} <- Blog.delete_user(user) do
-        send_resp(conn, :no_content, "")
-      end
+    with {:ok, %User{} = user} <- Blog.get_user_from_conn(conn),
+         {:ok, %User{}} <- Blog.delete_user(user) do
+      send_resp(conn, :no_content, "")
+    end
   end
 
   def login(conn, %{"user" => user_params}) do
