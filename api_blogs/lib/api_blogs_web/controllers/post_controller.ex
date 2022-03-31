@@ -8,29 +8,13 @@ defmodule ApiBlogsWeb.PostController do
   action_fallback ApiBlogsWeb.FallbackController
 
   def index(conn, _params) do
-    posts_users =
-      Blog.list_posts()
-      |> get_post_user()
+    posts_users = Blog.list_posts_with_users()
     render(conn, "index.json", posts_users: posts_users)
   end
 
-  defp get_post_user([]), do: []
-  defp get_post_user([post | posts]) do
-    with user <- Blog.get_user!(post.user_id) do
-      [ %{post: post, user: user} | get_post_user(posts)]
-    end
-  end
-  defp get_post_user(post) do
-    with user <- Blog.get_user!(post.user_id) do
-      %{post: post, user: user}
-    end
-  end
-
   def create(conn, %{"post" => post_params}) do
-    {:ok, %{"sub" => id}} = UserController.extract_id(conn)
-    new_post = Map.put(post_params, "user_id", id)
-
-    with {:ok, %Post{} = post} <- Blog.create_post(new_post) do
+    with {:ok, %{} = new_post} <- Blog.add_params_create_post(conn, post_params),
+         {:ok, %Post{} = post} <- Blog.create_post(new_post) do
       conn
       |> put_status(:created)
       |> render("create.json", post: post)
@@ -38,19 +22,17 @@ defmodule ApiBlogsWeb.PostController do
   end
 
   def show(conn, %{"id" => id}) do
-    id
-    |> Blog.get_post()
-    |> post_exists(conn)
+    with {:ok, %Post{} = post} <- Blog.get_post(id),
+         post_user <- Blog.get_post_user(post) do
+      render(conn, "show.json", post_user: post_user)
+    end
   end
 
-  defp post_exists(nil, _conn), do: {:error, :not_found, "Post nao existe"}
-  defp post_exists(post, conn), do: render(conn, "show.json", post_user: get_post_user(post))
-
   def update(conn, %{"id" => id, "post" => post_params}) do
-    post = Blog.get_post!(id)
-
-    with {:ok, %Post{} = post} <- Blog.update_post(post, post_params) do
-      render(conn, "show.json", post: post)
+    with {:ok, %Post{} = post} <- Blog.get_post(id),
+         {:ok, %Post{} = post} <- Blog.check_valid_update(conn, post, post_params),
+         {:ok, %Post{} = post} <- Blog.update_post(post, post_params) do
+      render(conn, "create.json", post: post)
     end
   end
 
