@@ -252,10 +252,10 @@ defmodule ApiBlogs.Blog do
   def update_post(%Post{} = _post, %{"content" => _} = attrs), do: {:error, :bad_request, "\"title\" is required"}
   def update_post(%Post{} = _post, %{"title" => _} = attrs), do: {:error, :bad_request, "\"content\" is required"}
 
-  def check_valid_update(conn, post, post_params) do
+  def check_valid_user(conn, post) do
     with {:ok, user_id} <- extract_id(conn),
          int_user_id <- convert_string_to_int(user_id),
-         {:ok, %Post{} = post} <- check_valid_user(int_user_id, post) do
+         {:ok, %Post{} = post} <- is_user_author(int_user_id, post) do
       {:ok, post}
     end
   end
@@ -266,8 +266,8 @@ defmodule ApiBlogs.Blog do
     |> elem(0)
   end
 
-  defp check_valid_user(id, post) when id != post.user_id, do: {:error, :unauthorized, "Usuario nao autorizado"}
-  defp check_valid_user(_id, post), do: {:ok, post}
+  defp is_user_author(id, post) when id != post.user_id, do: {:error, :unauthorized, "Usuario nao autorizado"}
+  defp is_user_author(_id, post), do: {:ok, post}
 
   @doc """
   Deletes a post.

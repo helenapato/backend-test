@@ -225,23 +225,44 @@ defmodule ApiBlogsWeb.PostControllerTest do
     end
   end
 
-  # describe "delete post" do
-  #   setup [:create_post]
+  describe "delete post" do
+    setup [:add_post_2_users]
 
-  #   test "deletes chosen post", %{conn: conn, post: post} do
-  #     conn = delete(conn, Routes.post_path(conn, :delete, post))
-  #     assert response(conn, 204)
+    test "renders deleted post", %{conn: conn, post: %{"id" => id}} do
+      conn = delete(conn, Routes.post_path(conn, :delete, id))
+      assert "" = response(conn, 204)
+    end
 
-  #     assert_error_sent 404, fn ->
-  #       get(conn, Routes.post_path(conn, :show, post))
-  #     end
-  #   end
-  # end
+    test "renders errors when post doesn't exist", %{conn: conn, post: %{"id" => id}} do
+      invalid_id = id + 1
+      conn = delete(conn, Routes.post_path(conn, :delete, invalid_id))
+      assert %{"message" => "Post nao existe"} = json_response(conn, 404)
+    end
 
-  # defp create_post(_) do
-  #   post = post_fixture()
-  #   %{post: post}
-  # end
+    test "renders errors when user is unauthorized", %{conn: conn, post: %{"id" => id}, jwt: jwt} do
+      conn =
+        build_conn()
+        |> put_valid_jwt_header(jwt)
+        |> delete(Routes.post_path(conn, :delete, id))
+      assert %{"message" => "Usuario nao autorizado"} = json_response(conn, 401)
+    end
+
+    test "renders errors when jwt is invalid", %{conn: conn, post: %{"id" => id}} do
+      conn =
+        build_conn()
+        |> put_invalid_jwt_header()
+        |> delete(Routes.post_path(conn, :delete, id))
+
+      assert %{"message" => "Token expirado ou invalido"} = json_response(conn, 401)
+    end
+
+    test "renders errors when jwt is missing", %{conn: conn, post: %{"id" => id}} do
+      conn =
+        build_conn()
+        |> delete(Routes.post_path(conn, :delete, id))
+      assert %{"message" => "Token nao encontrado"} = json_response(conn, 401)
+    end
+  end
 
   defp add_user_jwt %{conn: conn} do
     jwt =
