@@ -163,10 +163,10 @@ defmodule ApiBlogsWeb.PostControllerTest do
   describe "update post" do
     setup [:add_post_2_users]
 
-    test "renders post when data is valid", %{conn: conn, post: %{"id" => id} = post} do
+    test "renders post when data is valid", %{conn: conn, post: %{"id" => id}} do
       conn =
         conn
-        |> put(Routes.post_path(conn, :update, id, post), post: @update_attrs)
+        |> put(Routes.post_path(conn, :update, id), post: @update_attrs)
         |> get(Routes.post_path(conn, :show, id))
 
       assert %{
@@ -178,49 +178,49 @@ defmodule ApiBlogsWeb.PostControllerTest do
       } = json_response(conn, 200)
     end
 
-    test "renders errors when post doesn't exist", %{conn: conn, post: %{"id" => id} = post} do
+    test "renders errors when post doesn't exist", %{conn: conn, post: %{"id" => id}} do
       invalid_id = id + 1
-      conn = put(conn, Routes.post_path(conn, :update, invalid_id, post), post: @update_attrs)
+      conn = put(conn, Routes.post_path(conn, :update, invalid_id), post: @update_attrs)
       assert %{"message" => "Post nao existe"} = json_response(conn, 404)
     end
 
-    test "renders errors when user is unauthorized", %{conn: conn, post: %{"id" => id} = post, jwt: jwt} do
+    test "renders errors when user is unauthorized", %{conn: conn, post: %{"id" => id}, jwt: jwt} do
       conn =
         build_conn()
         |> put_valid_jwt_header(jwt)
-        |> put(Routes.post_path(conn, :update, id, post), post: @update_attrs)
+        |> put(Routes.post_path(conn, :update, id), post: @update_attrs)
       assert %{"message" => "Usuario nao autorizado"} = json_response(conn, 401)
     end
 
-    test "renders errors when no title is provided", %{conn: conn, post: %{"id" => id} = post} do
+    test "renders errors when no title is provided", %{conn: conn, post: %{"id" => id}} do
       invalid_attrs = %{
         content: "blablabla"
       }
-      conn = put(conn, Routes.post_path(conn, :update, id, post), post: invalid_attrs)
+      conn = put(conn, Routes.post_path(conn, :update, id), post: invalid_attrs)
       assert %{"message" => "\"title\" is required"} = json_response(conn, 400)
     end
 
-    test "renders errors when no content is provided", %{conn: conn, post: %{"id" => id} = post} do
+    test "renders errors when no content is provided", %{conn: conn, post: %{"id" => id}} do
       invalid_attrs = %{
         title: "title"
       }
-      conn = put(conn, Routes.post_path(conn, :update, id, post), post: invalid_attrs)
+      conn = put(conn, Routes.post_path(conn, :update, id), post: invalid_attrs)
       assert %{"message" => "\"content\" is required"} = json_response(conn, 400)
     end
 
-    test "renders errors when jwt is invalid", %{conn: conn, post: %{"id" => id} = post} do
+    test "renders errors when jwt is invalid", %{conn: conn, post: %{"id" => id}} do
       conn =
         build_conn()
         |> put_invalid_jwt_header()
-        |> put(Routes.post_path(conn, :update, id, post), post: @update_attrs)
+        |> put(Routes.post_path(conn, :update, id), post: @update_attrs)
 
       assert %{"message" => "Token expirado ou invalido"} = json_response(conn, 401)
     end
 
-    test "renders errors when jwt is missing", %{conn: conn, post: %{"id" => id} = post} do
+    test "renders errors when jwt is missing", %{conn: conn, post: %{"id" => id}} do
       conn =
         build_conn()
-        |> put(Routes.post_path(conn, :update, id, post), post: @update_attrs)
+        |> put(Routes.post_path(conn, :update, id), post: @update_attrs)
       assert %{"message" => "Token nao encontrado"} = json_response(conn, 401)
     end
   end
