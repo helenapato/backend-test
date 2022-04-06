@@ -30,16 +30,16 @@ defmodule ApiBlogsWeb.PostController do
 
   def update(conn, %{"id" => id, "post" => post_params}) do
     with {:ok, %Post{} = post} <- Blog.get_post(id),
-         {:ok, %Post{} = post} <- Blog.check_valid_update(conn, post, post_params),
+         {:ok, %Post{} = post} <- Blog.check_valid_user(conn, post),
          {:ok, %Post{} = post} <- Blog.update_post(post, post_params) do
       render(conn, "create.json", post: post)
     end
   end
 
   def delete(conn, %{"id" => id}) do
-    post = Blog.get_post!(id)
-
-    with {:ok, %Post{}} <- Blog.delete_post(post) do
+    with {:ok, %Post{} = post} <- Blog.get_post(id),
+         {:ok, %Post{} = post} <- Blog.check_valid_user(conn, post),
+         {:ok, %Post{}} <- Blog.delete_post(post) do
       send_resp(conn, :no_content, "")
     end
   end
