@@ -137,6 +137,23 @@ defmodule ApiBlogs.Blog do
     {:ok, id}
   end
 
+  @doc """
+  User login.
+  """
+  def do_login(%{"email" => "", "password" => _password}), do: {:error, :bad_request, "\"email\" is not allowed to be empty"}
+  def do_login(%{"email" => _email, "password" => ""}), do: {:error, :bad_request, "\"password\" is not allowed to be empty"}
+  def do_login(%{"email" => email, "password" => password}) do
+    User
+    |> Repo.get_by(email: email)
+    |> validate_login(password)
+  end
+  def do_login(%{"email" => _email}), do: {:error, :bad_request, "\"password\" is required"}
+  def do_login(%{"password" => _password}), do: {:error, :bad_request, "\"email\" is required"}
+
+  defp validate_login(nil, _password), do: {:error, :bad_request, "Campos invalidos"}
+  defp validate_login(user, password) when user.password != password, do: {:error, :bad_request, "Campos invalidos"}
+  defp validate_login(user, _password), do: {:ok, user}
+
   alias ApiBlogs.Blog.Post
 
   @doc """
@@ -164,10 +181,9 @@ defmodule ApiBlogs.Blog do
     end
   end
 
-  def list_posts_with_users do
-    posts_users =
-      list_posts()
-      |> get_post_user()
+  def list_posts_with_users() do
+    list_posts()
+    |> get_post_user()
   end
 
   @doc """
@@ -249,8 +265,8 @@ defmodule ApiBlogs.Blog do
     |> Post.changeset(attrs)
     |> Repo.update()
   end
-  def update_post(%Post{} = _post, %{"content" => _} = attrs), do: {:error, :bad_request, "\"title\" is required"}
-  def update_post(%Post{} = _post, %{"title" => _} = attrs), do: {:error, :bad_request, "\"content\" is required"}
+  def update_post(%Post{} = _post, %{"content" => _} = _attrs), do: {:error, :bad_request, "\"title\" is required"}
+  def update_post(%Post{} = _post, %{"title" => _} = _attrs), do: {:error, :bad_request, "\"content\" is required"}
 
   def check_valid_user(conn, post) do
     with {:ok, user_id} <- extract_id(conn),
@@ -298,21 +314,15 @@ defmodule ApiBlogs.Blog do
     Post.changeset(post, attrs)
   end
 
-  @doc """
-  User login.
-  """
-  def do_login(%{"email" => "", "password" => _password}), do: {:error, :bad_request, "\"email\" is not allowed to be empty"}
-  def do_login(%{"email" => _email, "password" => ""}), do: {:error, :bad_request, "\"password\" is not allowed to be empty"}
-  def do_login(%{"email" => email, "password" => password}) do
-    User
-    |> Repo.get_by(email: email)
-    |> validate_login(password)
+  def search_posts_by_term(searchTerm) do
+    query =
+      from p in Post,
+      where: ilike(p.title, ^"%#{searchTerm}%")
+        or ilike(p.content, ^"%#{searchTerm}%")
+    result = Repo.all(query)
+    case result do
+      [] -> []
+      _ -> get_post_user(result)
+    end
   end
-  def do_login(%{"email" => _email}), do: {:error, :bad_request, "\"password\" is required"}
-  def do_login(%{"password" => _password}), do: {:error, :bad_request, "\"email\" is required"}
-
-  defp validate_login(nil, _password), do: {:error, :bad_request, "Campos invalidos"}
-  defp validate_login(user, password) when user.password != password, do: {:error, :bad_request, "Campos invalidos"}
-  defp validate_login(user, _password), do: {:ok, user}
-
 end

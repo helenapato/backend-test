@@ -264,6 +264,97 @@ defmodule ApiBlogsWeb.PostControllerTest do
     end
   end
 
+  describe "search posts by term" do
+    setup [:add_2_posts]
+
+    test "renders posts when term is in title", %{conn: conn} do
+      conn = get(conn, Routes.post_path(conn, :show, "search", q: "august"))
+
+      assert %{
+        "data" => [
+          %{
+            "content" => "The whole text for the blog post goes here in this key",
+            "title" => "Latest updates, August 1st",
+            "user" => %{
+              "displayName" => "rubens silva",
+              "email" => "rubens@email.com",
+              "image" => "http://4.bp.blogspot.com/_YA50adQ-7vQ/S1gfR_6ufpI/AAAAAAAAAAk/1ErJGgRWZDg/S45/brett.png"
+            }
+          }
+        ]
+      } = json_response(conn, 200)
+    end
+
+    test "renders posts when term is in content", %{conn: conn} do
+      conn = get(conn, Routes.post_path(conn, :show, "search", q: "bla"))
+
+      assert %{
+        "data" => [
+          %{
+            "content" => "blablabla",
+            "title" => "titulo",
+            "user" => %{
+              "displayName" => "rubens silva",
+              "email" => "rubens@email.com",
+              "image" => "http://4.bp.blogspot.com/_YA50adQ-7vQ/S1gfR_6ufpI/AAAAAAAAAAk/1ErJGgRWZDg/S45/brett.png"
+            }
+          }
+        ]
+      } = json_response(conn, 200)
+    end
+
+    test "renders all posts when term is blank", %{conn: conn} do
+      conn = get(conn, Routes.post_path(conn, :show, "search", q: ""))
+
+      assert %{
+        "data" => [
+          %{
+            "content" => "The whole text for the blog post goes here in this key",
+            "title" => "Latest updates, August 1st",
+            "user" => %{
+              "displayName" => "rubens silva",
+              "email" => "rubens@email.com",
+              "image" => "http://4.bp.blogspot.com/_YA50adQ-7vQ/S1gfR_6ufpI/AAAAAAAAAAk/1ErJGgRWZDg/S45/brett.png"
+            }
+          },
+          %{
+            "content" => "blablabla",
+            "title" => "titulo",
+            "user" => %{
+              "displayName" => "rubens silva",
+              "email" => "rubens@email.com",
+              "image" => "http://4.bp.blogspot.com/_YA50adQ-7vQ/S1gfR_6ufpI/AAAAAAAAAAk/1ErJGgRWZDg/S45/brett.png"
+            }
+          }
+        ]
+      } = json_response(conn, 200)
+    end
+
+    test "renders empty list when term is not found", %{conn: conn} do
+      conn = get(conn, Routes.post_path(conn, :show, "search", q: "casa"))
+
+      assert %{
+        "data" => []
+      } = json_response(conn, 200)
+    end
+
+    test "renders errors when jwt is invalid", %{conn: conn} do
+      conn =
+        build_conn()
+        |> put_invalid_jwt_header()
+        |> get(Routes.post_path(conn, :show, "search", q: "august"))
+
+      assert %{"message" => "Token expirado ou invalido"} = json_response(conn, 401)
+    end
+
+    test "renders errors when jwt is missing", %{conn: conn} do
+      conn =
+        build_conn()
+        |> get(Routes.post_path(conn, :show, "search", q: "august"))
+      assert %{"message" => "Token nao encontrado"} = json_response(conn, 401)
+    end
+  end
+
   defp add_user_jwt %{conn: conn} do
     jwt =
       conn
