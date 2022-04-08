@@ -315,12 +315,11 @@ defmodule ApiBlogs.Blog do
   end
 
   def search_posts_by_term(searchTerm) do
-    query =
-      from p in Post,
-      where: ilike(p.title, ^"%#{searchTerm}%")
-        or ilike(p.content, ^"%#{searchTerm}%")
-    result = Repo.all(query)
-    case result do
+    from p in Post,
+     where: ilike(p.title, ^"%#{searchTerm}%")
+       or ilike(p.content, ^"%#{searchTerm}%")
+    |> Repo.all()
+    |> case  do
       [] -> []
       _ -> get_post_user(result)
     end
