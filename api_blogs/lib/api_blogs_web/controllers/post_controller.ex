@@ -21,6 +21,10 @@ defmodule ApiBlogsWeb.PostController do
     end
   end
 
+  def show(conn, %{"id" => "search", "q" => searchTerm}) do
+    posts_with_term = Blog.search_posts_by_term(searchTerm)
+    render(conn, "index.json", posts_users: posts_with_term)
+  end
   def show(conn, %{"id" => id}) do
     with {:ok, %Post{} = post} <- Blog.get_post(id),
          post_user <- Blog.get_post_user(post) do

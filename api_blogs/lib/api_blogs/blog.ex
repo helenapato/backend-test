@@ -61,6 +61,10 @@ defmodule ApiBlogs.Blog do
     end
   end
 
+  @doc """
+  Returns the user whose jwt token is in the conn header.
+
+  """
   def get_user_from_conn(conn) do
     with {:ok, id} <- extract_id(conn) do
       get_user(id)
@@ -132,10 +136,35 @@ defmodule ApiBlogs.Blog do
     User.changeset(user, attrs)
   end
 
+  @doc """
+  Returns the id of the user whose jwt token is in the conn header.
+
+  """
   defp extract_id(%{private: %{guardian_default_token: token}}) do
     {:ok, %{"sub" => id}} = Guardian.decode_and_verify(token)
     {:ok, id}
   end
+
+  @doc """
+  Checks if email and password were provided for login and if they are correct.
+  If they are, returns a tuple of {:ok, user}.
+
+  Returns error if anything is wrong.
+
+  """
+  def do_login(%{"email" => "", "password" => _password}), do: {:error, :bad_request, "\"email\" is not allowed to be empty"}
+  def do_login(%{"email" => _email, "password" => ""}), do: {:error, :bad_request, "\"password\" is not allowed to be empty"}
+  def do_login(%{"email" => email, "password" => password}) do
+    User
+    |> Repo.get_by(email: email)
+    |> validate_login(password)
+  end
+  def do_login(%{"email" => _email}), do: {:error, :bad_request, "\"password\" is required"}
+  def do_login(%{"password" => _password}), do: {:error, :bad_request, "\"email\" is required"}
+
+  defp validate_login(nil, _password), do: {:error, :bad_request, "Campos invalidos"}
+  defp validate_login(user, password) when user.password != password, do: {:error, :bad_request, "Campos invalidos"}
+  defp validate_login(user, _password), do: {:ok, user}
 
   alias ApiBlogs.Blog.Post
 
@@ -152,6 +181,13 @@ defmodule ApiBlogs.Blog do
     Repo.all(Post)
   end
 
+  @doc """
+  Using a list of posts, creates a list of maps of the posts and it's author users.
+
+
+  With a single post, creates a single map of the post and it's author.
+
+  """
   def get_post_user([]), do: []
   def get_post_user([post | posts]) do
     with user <- get_user!(post.user_id) do
@@ -164,10 +200,13 @@ defmodule ApiBlogs.Blog do
     end
   end
 
-  def list_posts_with_users do
-    posts_users =
-      list_posts()
-      |> get_post_user()
+  @doc """
+  Returns a list of all posts in database together with their authors.
+
+  """
+  def list_posts_with_users() do
+    list_posts()
+    |> get_post_user()
   end
 
   @doc """
@@ -226,6 +265,10 @@ defmodule ApiBlogs.Blog do
     |> Repo.insert()
   end
 
+  @doc """
+  Creates a map with the required parameters to create a post.
+
+  """
   def add_params_create_post(conn, post_params) do
     {:ok, id} = extract_id(conn)
     new_post = Map.put(post_params, "user_id", id)
@@ -233,7 +276,7 @@ defmodule ApiBlogs.Blog do
   end
 
   @doc """
-  Updates a post.
+  Updates a post, if the update is valid.
 
   ## Examples
 
@@ -249,9 +292,14 @@ defmodule ApiBlogs.Blog do
     |> Post.changeset(attrs)
     |> Repo.update()
   end
-  def update_post(%Post{} = _post, %{"content" => _} = attrs), do: {:error, :bad_request, "\"title\" is required"}
-  def update_post(%Post{} = _post, %{"title" => _} = attrs), do: {:error, :bad_request, "\"content\" is required"}
+  def update_post(%Post{} = _post, %{"content" => _} = _attrs), do: {:error, :bad_request, "\"title\" is required"}
+  def update_post(%Post{} = _post, %{"title" => _} = _attrs), do: {:error, :bad_request, "\"content\" is required"}
 
+
+  @doc """
+  Checks if the user whose jwt token is in the conn header is allowed to edit a post.
+
+  """
   def check_valid_user(conn, post) do
     with {:ok, user_id} <- extract_id(conn),
          int_user_id <- convert_string_to_int(user_id),
@@ -260,12 +308,20 @@ defmodule ApiBlogs.Blog do
     end
   end
 
+  @doc """
+  Converts a string number to int.
+
+  """
   defp convert_string_to_int(string) do
     string
     |> Integer.parse()
     |> elem(0)
   end
 
+  @doc """
+  Checks if the id given is that of the post's author. In case it's not, returns error.
+
+  """
   defp is_user_author(id, post) when id != post.user_id, do: {:error, :unauthorized, "Usuario nao autorizado"}
   defp is_user_author(_id, post), do: {:ok, post}
 
@@ -299,20 +355,19 @@ defmodule ApiBlogs.Blog do
   end
 
   @doc """
-  User login.
+  Searches the database for posts with a given term in title or content.
+  Returns a list of posts with users wich match the term.
+
   """
-  def do_login(%{"email" => "", "password" => _password}), do: {:error, :bad_request, "\"email\" is not allowed to be empty"}
-  def do_login(%{"email" => _email, "password" => ""}), do: {:error, :bad_request, "\"password\" is not allowed to be empty"}
-  def do_login(%{"email" => email, "password" => password}) do
-    User
-    |> Repo.get_by(email: email)
-    |> validate_login(password)
+  def search_posts_by_term(searchTerm) do
+    query =
+      from p in Post,
+      where: ilike(p.title, ^"%#{searchTerm}%")
+        or ilike(p.content, ^"%#{searchTerm}%")
+    result = Repo.all(query)
+    case result do
+      [] -> []
+      _ -> get_post_user(result)
+    end
   end
-  def do_login(%{"email" => _email}), do: {:error, :bad_request, "\"password\" is required"}
-  def do_login(%{"password" => _password}), do: {:error, :bad_request, "\"email\" is required"}
-
-  defp validate_login(nil, _password), do: {:error, :bad_request, "Campos invalidos"}
-  defp validate_login(user, password) when user.password != password, do: {:error, :bad_request, "Campos invalidos"}
-  defp validate_login(user, _password), do: {:ok, user}
-
 end
