@@ -136,10 +136,6 @@ defmodule ApiBlogs.Blog do
     User.changeset(user, attrs)
   end
 
-  @doc """
-  Returns the id of the user whose jwt token is in the conn header.
-
-  """
   defp extract_id(%{private: %{guardian_default_token: token}}) do
     {:ok, %{"sub" => id}} = Guardian.decode_and_verify(token)
     {:ok, id}
@@ -308,20 +304,12 @@ defmodule ApiBlogs.Blog do
     end
   end
 
-  @doc """
-  Converts a string number to int.
-
-  """
   defp convert_string_to_int(string) do
     string
     |> Integer.parse()
     |> elem(0)
   end
 
-  @doc """
-  Checks if the id given is that of the post's author. In case it's not, returns error.
-
-  """
   defp is_user_author(id, post) when id != post.user_id, do: {:error, :unauthorized, "Usuario nao autorizado"}
   defp is_user_author(_id, post), do: {:ok, post}
 

@@ -1,10 +1,6 @@
 defmodule ApiBlogsWeb.UserControllerTest do
   use ApiBlogsWeb.ConnCase
 
-  import ApiBlogs.BlogFixtures
-
-  alias ApiBlogs.Blog.User
-
   @create_attrs %{
     displayName: "rubens silva",
     email: "rubens@email.com",

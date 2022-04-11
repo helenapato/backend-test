@@ -3,7 +3,6 @@ defmodule ApiBlogsWeb.PostController do
 
   alias ApiBlogs.Blog
   alias ApiBlogs.Blog.Post
-  alias ApiBlogsWeb.UserController
 
   action_fallback ApiBlogsWeb.FallbackController
 

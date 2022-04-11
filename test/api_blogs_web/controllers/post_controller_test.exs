@@ -1,10 +1,6 @@
 defmodule ApiBlogsWeb.PostControllerTest do
   use ApiBlogsWeb.ConnCase
 
-  import ApiBlogs.BlogFixtures
-
-  alias ApiBlogs.Blog.Post
-
   @create_attrs %{
     content: "The whole text for the blog post goes here in this key",
     title: "Latest updates, August 1st"
