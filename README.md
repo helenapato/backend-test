@@ -19,11 +19,11 @@ Instruções para instalar e configurar o projeto em seu computador.
 ## Testando
 Para rodar os testes do user controller, use o comando abaixo
 
-	mix test test\api_blogs_web\controllers\user_controller_test.exs
+	mix test test/api_blogs_web/controllers/user_controller_test.exs
 
 Para rodar os testes do post controller, use o comando abaixo
 
-	mix test test\api_blogs_web\controllers\post_controller_test.exs
+	mix test test/api_blogs_web/controllers/post_controller_test.exs
 Para rodar todos os testes, use o comando abaixo
 
 	mix test
