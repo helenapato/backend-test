@@ -6,20 +6,20 @@ Instruções para instalar e configurar o projeto em seu computador.
 2. Clonar o repositório na pasta em que será criado o projeto
 
 		git clone https://github.com/helenapato/backend-test.git
-3. Copiar os arquivos de configuração
+3. Copiar os arquivos de configuração e, caso necessário, configurar a base de dados, mudando o nome de usuário e senha
 
 		cp config/dev.exs.example config/dev.exs
 		cp config/test.exs.example config/test.exs
-4. Caso necessário, no arquivo `config/dev.exs`, configurar a base de dados, mudando o nome de usuário e senha
-5. Instalar as dependências
+4. Instalar as dependências
 
 		mix deps.get
-6. Criar a base de dados
+5. Criar a base de dados
 
 		mix ecto.create 
-7. Rodar as migrations
+6. Rodar as migrations
 
 		mix ecto.migrate
+
 ## Testando
 Para rodar os testes do user controller, use o comando abaixo
 
