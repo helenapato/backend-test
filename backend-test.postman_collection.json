@@ -1,0 +1,359 @@
+{
+	"info": {
+		"_postman_id": "043c34bc-5cdd-4855-b5cb-2ac0a9c29e4d",
+		"name": "backend-test",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Criar usuário",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"user\": {\r\n        \"displayName\": \"Brett Wiltshire\",\r\n        \"email\": \"brett@email.com\",\r\n        \"password\": \"123456\",\r\n        \"image\": \"http://4.bp.blogspot.com/_YA50adQ-7vQ/S1gfR_6ufpI/AAAAAAAAAAk/1ErJGgRWZDg/S45/brett.png\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{local-url}}/api/user",
+					"host": [
+						"{{local-url}}"
+					],
+					"path": [
+						"api",
+						"user"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Fazer login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"user\": {\r\n        \"email\": \"brett@email.com\",\r\n        \"password\": \"123456\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{local-url}}/api/login",
+					"host": [
+						"{{local-url}}"
+					],
+					"path": [
+						"api",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Listar usuários",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhcGlfYmxvZ3MiLCJleHAiOjE2NTM1ODYwNzQsImlhdCI6MTY1MTE2Njg3NCwiaXNzIjoiYXBpX2Jsb2dzIiwianRpIjoiOTc1YjZmZDYtY2Y5ZC00MWYzLWJmZGEtMzcwYzI4NTY5ZjQzIiwibmJmIjoxNjUxMTY2ODczLCJzdWIiOiIxIiwidHlwIjoiYWNjZXNzIn0.krXQwQ7Mre0inXnTKaHSNt9pp3BKhhbEQ8A8NxhtlAEi7wuMsS3CDSHHGtRQyKNWhRrMO8ZMjdNvNKMB_46c-w",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{local-url}}/api/user",
+					"host": [
+						"{{local-url}}"
+					],
+					"path": [
+						"api",
+						"user"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Retornar usuário específico",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhcGlfYmxvZ3MiLCJleHAiOjE2NTM1ODYwNzQsImlhdCI6MTY1MTE2Njg3NCwiaXNzIjoiYXBpX2Jsb2dzIiwianRpIjoiOTc1YjZmZDYtY2Y5ZC00MWYzLWJmZGEtMzcwYzI4NTY5ZjQzIiwibmJmIjoxNjUxMTY2ODczLCJzdWIiOiIxIiwidHlwIjoiYWNjZXNzIn0.krXQwQ7Mre0inXnTKaHSNt9pp3BKhhbEQ8A8NxhtlAEi7wuMsS3CDSHHGtRQyKNWhRrMO8ZMjdNvNKMB_46c-w",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{local-url}}/api/user/{{user-id}}",
+					"host": [
+						"{{local-url}}"
+					],
+					"path": [
+						"api",
+						"user",
+						"{{user-id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Deletar usuário atual",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhcGlfYmxvZ3MiLCJleHAiOjE2NTM1ODYwNzQsImlhdCI6MTY1MTE2Njg3NCwiaXNzIjoiYXBpX2Jsb2dzIiwianRpIjoiOTc1YjZmZDYtY2Y5ZC00MWYzLWJmZGEtMzcwYzI4NTY5ZjQzIiwibmJmIjoxNjUxMTY2ODczLCJzdWIiOiIxIiwidHlwIjoiYWNjZXNzIn0.krXQwQ7Mre0inXnTKaHSNt9pp3BKhhbEQ8A8NxhtlAEi7wuMsS3CDSHHGtRQyKNWhRrMO8ZMjdNvNKMB_46c-w",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{local-url}}/api/user/me",
+					"host": [
+						"{{local-url}}"
+					],
+					"path": [
+						"api",
+						"user",
+						"me"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Criar post",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhcGlfYmxvZ3MiLCJleHAiOjE2NTM1ODYwNzQsImlhdCI6MTY1MTE2Njg3NCwiaXNzIjoiYXBpX2Jsb2dzIiwianRpIjoiOTc1YjZmZDYtY2Y5ZC00MWYzLWJmZGEtMzcwYzI4NTY5ZjQzIiwibmJmIjoxNjUxMTY2ODczLCJzdWIiOiIxIiwidHlwIjoiYWNjZXNzIn0.krXQwQ7Mre0inXnTKaHSNt9pp3BKhhbEQ8A8NxhtlAEi7wuMsS3CDSHHGtRQyKNWhRrMO8ZMjdNvNKMB_46c-w",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"post\": {\r\n        \"title\": \"Latest updates, August 1st\",\r\n        \"content\": \"The whole text for the blog post goes here in this key\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{local-url}}/api/post",
+					"host": [
+						"{{local-url}}"
+					],
+					"path": [
+						"api",
+						"post"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Listar posts",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhcGlfYmxvZ3MiLCJleHAiOjE2NTM1ODYwNzQsImlhdCI6MTY1MTE2Njg3NCwiaXNzIjoiYXBpX2Jsb2dzIiwianRpIjoiOTc1YjZmZDYtY2Y5ZC00MWYzLWJmZGEtMzcwYzI4NTY5ZjQzIiwibmJmIjoxNjUxMTY2ODczLCJzdWIiOiIxIiwidHlwIjoiYWNjZXNzIn0.krXQwQ7Mre0inXnTKaHSNt9pp3BKhhbEQ8A8NxhtlAEi7wuMsS3CDSHHGtRQyKNWhRrMO8ZMjdNvNKMB_46c-w",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{local-url}}/api/post",
+					"host": [
+						"{{local-url}}"
+					],
+					"path": [
+						"api",
+						"post"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Retornar post específico",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhcGlfYmxvZ3MiLCJleHAiOjE2NTM1ODYwNzQsImlhdCI6MTY1MTE2Njg3NCwiaXNzIjoiYXBpX2Jsb2dzIiwianRpIjoiOTc1YjZmZDYtY2Y5ZC00MWYzLWJmZGEtMzcwYzI4NTY5ZjQzIiwibmJmIjoxNjUxMTY2ODczLCJzdWIiOiIxIiwidHlwIjoiYWNjZXNzIn0.krXQwQ7Mre0inXnTKaHSNt9pp3BKhhbEQ8A8NxhtlAEi7wuMsS3CDSHHGtRQyKNWhRrMO8ZMjdNvNKMB_46c-w",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{local-url}}/api/post/{{post-id}}",
+					"host": [
+						"{{local-url}}"
+					],
+					"path": [
+						"api",
+						"post",
+						"{{post-id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Atualizar post",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhcGlfYmxvZ3MiLCJleHAiOjE2NTM1ODYwNzQsImlhdCI6MTY1MTE2Njg3NCwiaXNzIjoiYXBpX2Jsb2dzIiwianRpIjoiOTc1YjZmZDYtY2Y5ZC00MWYzLWJmZGEtMzcwYzI4NTY5ZjQzIiwibmJmIjoxNjUxMTY2ODczLCJzdWIiOiIxIiwidHlwIjoiYWNjZXNzIn0.krXQwQ7Mre0inXnTKaHSNt9pp3BKhhbEQ8A8NxhtlAEi7wuMsS3CDSHHGtRQyKNWhRrMO8ZMjdNvNKMB_46c-w",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"post\": {\r\n        \"title\": \"Latest updates, September 1st\",\r\n        \"content\": \"Changes\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{local-url}}/api/post/{{post-id}}",
+					"host": [
+						"{{local-url}}"
+					],
+					"path": [
+						"api",
+						"post",
+						"{{post-id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Buscar post",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhcGlfYmxvZ3MiLCJleHAiOjE2NTM1ODYwNzQsImlhdCI6MTY1MTE2Njg3NCwiaXNzIjoiYXBpX2Jsb2dzIiwianRpIjoiOTc1YjZmZDYtY2Y5ZC00MWYzLWJmZGEtMzcwYzI4NTY5ZjQzIiwibmJmIjoxNjUxMTY2ODczLCJzdWIiOiIxIiwidHlwIjoiYWNjZXNzIn0.krXQwQ7Mre0inXnTKaHSNt9pp3BKhhbEQ8A8NxhtlAEi7wuMsS3CDSHHGtRQyKNWhRrMO8ZMjdNvNKMB_46c-w",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{local-url}}/api/post/search?q=update",
+					"host": [
+						"{{local-url}}"
+					],
+					"path": [
+						"api",
+						"post",
+						"search"
+					],
+					"query": [
+						{
+							"key": "q",
+							"value": "update"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Deletar post",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhcGlfYmxvZ3MiLCJleHAiOjE2NTM1ODYwNzQsImlhdCI6MTY1MTE2Njg3NCwiaXNzIjoiYXBpX2Jsb2dzIiwianRpIjoiOTc1YjZmZDYtY2Y5ZC00MWYzLWJmZGEtMzcwYzI4NTY5ZjQzIiwibmJmIjoxNjUxMTY2ODczLCJzdWIiOiIxIiwidHlwIjoiYWNjZXNzIn0.krXQwQ7Mre0inXnTKaHSNt9pp3BKhhbEQ8A8NxhtlAEi7wuMsS3CDSHHGtRQyKNWhRrMO8ZMjdNvNKMB_46c-w",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{local-url}}/api/post/{{post-id}}",
+					"host": [
+						"{{local-url}}"
+					],
+					"path": [
+						"api",
+						"post",
+						"{{post-id}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "local-url",
+			"value": "http://localhost:4000"
+		},
+		{
+			"key": "user-id",
+			"value": "1"
+		},
+		{
+			"key": "post-id",
+			"value": "12"
+		}
+	]
+}
